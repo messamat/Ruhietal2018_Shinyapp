@@ -198,19 +198,6 @@ library(HatchedPolygons)
 # metadata <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_6/www/metadata_columns.csv')
 
 ############################################################################################################################
-#Potential additional features to add:
-#When click HUC, show a graph of gaging density over time
-#Could add GRDC download (try <- tsGRDC(stationID =GRDCdat@data$grdc_no[c(1000,1001,1002)], plotOption = F))
-#Add interactive scatterplots of fish diversity, water scarcity, and flood risk with decline risk in US tab for user to zoom in to HUC
-#Popups when user hovers over column names of table
-
-#Features to add before completion:
-# Replace general observe statements by observeEvents
-# Make proper github
-
-#See for example of methodology and source codes, etc.
-#http://urbanstudies.tcu.edu/research/open-data/tx-demographics/
-############################################################################################################################
 
 load("Map_6.RData")
 
