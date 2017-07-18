@@ -21,182 +21,7 @@ library(gridExtra)
 library(HatchedPolygons)
 #vignette("leaflet_shading_polygon", package = "HatchedPolygons")
 
-################################################################## PREPARE DATA ##########################################################################
-# ###############################
-# # Prepare world gages network 
-# ###############################
-# #Import GRDC data
-# GRDCdat <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/World_gages/20170124_GRDC_Stations 2_metadata.csv")
-# coordinates(GRDCdat) <- ~long+lat
-# class(GRDCdat)
-#
-# ###############################
-# # Prepare US basins attributes
-# ###############################
-# #Read in data on quasi-extinction probability (decline risk)
-# quasi_ext <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/Quasi-extinction/version_4/Quasiext.huc6_v4.csv")
-# quasi_ext [quasi_ext $rownames_HUC6 < 100000,'HUC6'] <- paste('0',as.character(quasi_ext [quasi_ext $rownames_HUC6 < 100000,'rownames_HUC6']),sep="")
-# quasi_ext [quasi_ext $rownames_HUC6 >= 100000,'HUC6'] <- as.character(quasi_ext [quasi_ext $rownames_HUC6 >= 100000,'rownames_HUC6'])
-# quasi_ext <- quasi_ext[,-c(1,2)]
-# 
-# #Read in data on basin characteristics
-# fishdiv <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/Fish/HUC6div.csv", colClasses=c("character", rep('numeric',4)))
-# ndc <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/Water_Scarcity/HUC6_NDC_pr.csv", colClasses=c("character","character", rep('numeric', 12)))
-# ndc <- select(ndc, HUC6, NDC_HUC)
-# flood <- read.dbf("F:/Miscellaneous/Hydro_classes/Analysis/Flood/HUC6_floodFEMA_data.dbf")
-# 
-# #Check data structure
-# str(quasi_ext)
-# str(fishdiv)
-# str(ndc)
-# str(flood)
-# 
-# #Not useful - test
-# read.dbf("F:/Miscellaneous/Hydro_classes/Analysis/Fish/HUC6div_category.dbf")
-# 
-# #Merge fishdiv, ndc, flood, quasi-ext with HUC6
-# data_merge <- merge(quasi_ext, fishdiv, by.x="HUC6", by.y="HUC6_id", all.x =T) %>%
-#   merge(., ndc, by="HUC6", all.x =T) %>%
-#   merge(., flood, by="HUC6", all.x =T)
-# 
-# Take out a columns Tot.Area.x, etc.
-#
-# #Categorize basins in two levels for each characteristic: fish diversity, water scarcity, and flood rosk
-# #Fish div (categorize based on median fish EWU)
-# med_EWU = median(data_merge$EWU, na.rm=T)
-# data_merge[data_merge$EWU >= med_EWU & !is.na(data_merge$EWU),"fish_category"] <- "HighEndemism"
-# data_merge[data_merge$EWU < med_EWU & !is.na(data_merge$EWU),"fish_category"] <- "LowEndemism"
-# data_merge[is.na(data_merge$EWU),"fish_category"] <- "NoEWUdata"
-#
-# #NDC (categorize as high NDC when historical maximum cumulative deficit exceeds a full year of precipitation)
-# med_NDC_HUC = median(data_merge$NDC_HUC, na.rm=T)
-# data_merge[data_merge$NDC_HUC >= 1 & !is.na(data_merge$EWU),"ndc_category"] <- "HighNDC"
-# data_merge[data_merge$NDC_HUC < 1 & !is.na(data_merge$EWU),"ndc_category"] <- "LowNDC"
-#
-# #Flood (categorized as high flood risk when over 5% of the population inhabiting an area with a flood risk map lives wihtin a 100-yr flood zone)
-# med_floodpop = median(data_merge$flood_FEMA, na.rm=T)
-# data_merge[data_merge$flood_FEMA >= 0.05 & !is.na(data_merge$EWU),"flood_category"] <- "HighRisk"
-# data_merge[data_merge$flood_FEMA < 0.05 & !is.na(data_merge$EWU),"flood_category"] <- "LowRisk"
-# data_merge[data_merge$HUC6_pop_FEMAzone == 0 & !is.na(data_merge$EWU),"flood_category"] <- "NoFEMAdata"
-# data_merge[data_merge$TotArea_x == 0] <- "NA"
-#
-# data_merge$fishndc_category <- paste(data_merge$fish_category,data_merge$ndc_category,sep="_")
-# data_merge$fishflood_category <- paste(data_merge$fish_category,data_merge$flood_category,sep="_")
-# data_merge$ndcflood_category <- paste(data_merge$ndc_category,data_merge$flood_category,sep="_")
-# data_merge$all_category <- paste(data_merge$ndc_category,data_merge$flood_category, data_merge$fish_category, sep="_")
-#
-# ###################################
-# # Prepare US gages geospatial data
-# ###################################
-# #Read the feature class of gages
-# fgdb = "F:/Miscellaneous/Hydro_classes/Figures/Figure_1_map/Figure1_map.gdb"
-# gagefc = readOGR(dsn=fgdb,layer="allgages_merge_manual_hist")
-# #Change column names
-# dischargecast<-read.csv("F:/Miscellaneous/Hydro_classes/discharge_yearly_cast_all.csv",colClasses=c(rep("character",3), rep("numeric",156)))
-# colnames(gagefc@data)[9:164] <- colnames(dischargecast[,4:159])
-# #Remove gages with NA values (46 gages/23k)
-# gagefc <- gagefc[!is.na(gagefc@data$X1861),]
-#
-# ###################################
-# # Prepare US basins geospatial data
-# ###################################
-#
-# # Import basins shapefile
-# folder = "F:/Miscellaneous/Hydro_classes/Figures/Figure_3"
-# fc = readOGR(dsn=folder,layer="HUC6")
-# # Determine the FC extent, projection, and attribute information
-# class(fc)
-# summary(fc)
-# #Merge shapefile with attributes
-# fc_merge <- merge(fc, data_merge, by="HUC6",all.x=T)
-#
-# #Simplify polygons to reduce load time
-# summary(fc_merge)
-# object.size(fc_merge)
-# simplified <- rmapshaper::ms_simplify(fc_merge)
-# object.size(simplified)
-# 
-# #Prepare hatched polygons to represent basins with high gaging density decline risk
-# #Twicked from https://statnmap.com/en/2017/05/how-to-fill-a-hatched-area-polygon-with-holes-in-leaflet-with-r/
-# #hatched.SpatialPolygons didn't work so had to troubleshoot the function to generate hatches + didn't need to have the 'holes' functionality
-# #Can change density and angle for aesthetics
-# #Select basins with high decline risk
-# extsimplified <- simplified[simplified@data$Quasiext.huc6 >= 0.5 & !is.na(simplified@data$Quasiext.huc6),]
-# density = 5
-# angle = 45
-# fillOddEven = FALSE
-# #Make sure that input isspatialPolygons 
-# if (!is(extsimplified, "SpatialPolygons"))
-#   stop("Not a SpatialPolygons object")
-# 
-# n <- length(slot(extsimplified, "polygons"))
-# polys <- slot(extsimplified, "polygons")
-# pO <- slot(extsimplified, "plotOrder")
-# 
-# if (length(density) != n)
-#   density <- rep(density, n, n)
-# if (length(angle) != n)
-#   angle <- rep(angle, n, n)
-# 
-# all.Lines <- list()
-# all.Lines.ID <- numeric(0)
-# 
-# for (j in pO) {
-#   print(j)
-#   ID = polys[[j]]@ID
-#   Sr <- polys[[j]]
-#   if (!is(Sr, "Polygons"))
-#     stop("Not a Polygons object")
-# 
-#   pO2 <- slot(Sr, "plotOrder")
-#   polys2 <- slot(Sr, "Polygons")
-#   #print(pO2)
-# 
-#   all.Lines2 <- list()
-#   for (i in pO2) {
-#     #print(i)
-#     if (!slot(polys2[[i]], "hole")) {
-#       # Transform polygon as parallel lines
-#       lines.hatch <- polygon.fullhatch(slot(polys2[[i]], "coords"),
-#                                        density = density[j], angle = angle[j], fillOddEven = fillOddEven)
-#       #The code wasn't working when the polygon was so small that no line could go through it/be calculated (e.g. island of HUC6 040301)
-#       # So skip very small polygons in multi-polygon records
-#       if (!is.null(lines.hatch)) {
-#         # Transform as SpatialLines
-#         Lines.i <- SpatialLines(list(Lines(
-#           apply(lines.hatch, 1,
-#                 function(x) Line(cbind(c(x[1], x[3]), c(x[2], x[4])))),
-#           ID = i)))
-# 
-#         # Clean Lines if over a "hole"
-#         Lines.i.holes <- rgeos::gIntersection(Lines.i, SpatialPolygons(list(Sr)),
-#                                               drop_lower_td = TRUE)
-# 
-#         if (!is.null(Lines.i.holes)) {
-#           Lines.i.holes@lines[[1]]@ID <- paste0(ID, ".", i)
-#           all.Lines2[[length(all.Lines2) + 1]] <- Lines.i.holes@lines[[1]]
-#         }
-#       } else {
-#         print('skip')
-#       }
-#     }
-#   }
-#   all.Lines.ID <- c(all.Lines.ID, rep(polys[[j]]@ID, length(all.Lines2)))
-#   all.Lines[length(all.Lines) + 1:length(all.Lines2)] <- all.Lines2
-# }
-# # Correct ID
-# SpatialLinesDF <- SpatialLinesDataFrame(
-#   SpatialLines(all.Lines),
-#   data = data.frame(ID = all.Lines.ID),
-#   match.ID = FALSE)
-#
-# ################################
-# #Add metadata files to workspace
-# ################################
-# readme <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_6/www/README.txt')
-# metadata <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_6/www/metadata_columns.csv')
-
-############################################################################################################################
+################## SEE DATA PREP AT THE END OF THIS CODE ##########################
 
 load("Map_6.RData")
 
@@ -777,3 +602,184 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
+
+
+################################################################## DATA PREPARATION ##########################################################################
+#Please contact Mathis Messager @ messamat@uw.edu for the raw data required to perform data prep. 
+#The working space should be sufficient to run the app locally provided one or two changes in the code
+
+# ###############################
+# # Prepare world gages network 
+# ###############################
+# #Import GRDC data
+# GRDCdat <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/World_gages/20170124_GRDC_Stations 2_metadata.csv")
+# coordinates(GRDCdat) <- ~long+lat
+# class(GRDCdat)
+#
+# ###############################
+# # Prepare US basins attributes
+# ###############################
+# #Read in data on quasi-extinction probability (decline risk)
+# quasi_ext <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/Quasi-extinction/version_4/Quasiext.huc6_v4.csv")
+# quasi_ext [quasi_ext $rownames_HUC6 < 100000,'HUC6'] <- paste('0',as.character(quasi_ext [quasi_ext $rownames_HUC6 < 100000,'rownames_HUC6']),sep="")
+# quasi_ext [quasi_ext $rownames_HUC6 >= 100000,'HUC6'] <- as.character(quasi_ext [quasi_ext $rownames_HUC6 >= 100000,'rownames_HUC6'])
+# quasi_ext <- quasi_ext[,-c(1,2)]
+# 
+# #Read in data on basin characteristics
+# fishdiv <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/Fish/HUC6div.csv", colClasses=c("character", rep('numeric',4)))
+# ndc <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/Water_Scarcity/HUC6_NDC_pr.csv", colClasses=c("character","character", rep('numeric', 12)))
+# ndc <- select(ndc, HUC6, NDC_HUC)
+# flood <- read.dbf("F:/Miscellaneous/Hydro_classes/Analysis/Flood/HUC6_floodFEMA_data.dbf")
+# 
+# #Check data structure
+# str(quasi_ext)
+# str(fishdiv)
+# str(ndc)
+# str(flood)
+# 
+# #Not useful - test
+# read.dbf("F:/Miscellaneous/Hydro_classes/Analysis/Fish/HUC6div_category.dbf")
+# 
+# #Merge fishdiv, ndc, flood, quasi-ext with HUC6
+# data_merge <- merge(quasi_ext, fishdiv, by.x="HUC6", by.y="HUC6_id", all.x =T) %>%
+#   merge(., ndc, by="HUC6", all.x =T) %>%
+#   merge(., flood, by="HUC6", all.x =T)
+# 
+# Take out a columns Tot.Area.x, etc.
+#
+# #Categorize basins in two levels for each characteristic: fish diversity, water scarcity, and flood rosk
+# #Fish div (categorize based on median fish EWU)
+# med_EWU = median(data_merge$EWU, na.rm=T)
+# data_merge[data_merge$EWU >= med_EWU & !is.na(data_merge$EWU),"fish_category"] <- "HighEndemism"
+# data_merge[data_merge$EWU < med_EWU & !is.na(data_merge$EWU),"fish_category"] <- "LowEndemism"
+# data_merge[is.na(data_merge$EWU),"fish_category"] <- "NoEWUdata"
+#
+# #NDC (categorize as high NDC when historical maximum cumulative deficit exceeds a full year of precipitation)
+# med_NDC_HUC = median(data_merge$NDC_HUC, na.rm=T)
+# data_merge[data_merge$NDC_HUC >= 1 & !is.na(data_merge$EWU),"ndc_category"] <- "HighNDC"
+# data_merge[data_merge$NDC_HUC < 1 & !is.na(data_merge$EWU),"ndc_category"] <- "LowNDC"
+#
+# #Flood (categorized as high flood risk when over 5% of the population inhabiting an area with a flood risk map lives wihtin a 100-yr flood zone)
+# med_floodpop = median(data_merge$flood_FEMA, na.rm=T)
+# data_merge[data_merge$flood_FEMA >= 0.05 & !is.na(data_merge$EWU),"flood_category"] <- "HighRisk"
+# data_merge[data_merge$flood_FEMA < 0.05 & !is.na(data_merge$EWU),"flood_category"] <- "LowRisk"
+# data_merge[data_merge$HUC6_pop_FEMAzone == 0 & !is.na(data_merge$EWU),"flood_category"] <- "NoFEMAdata"
+# data_merge[data_merge$TotArea_x == 0] <- "NA"
+#
+# data_merge$fishndc_category <- paste(data_merge$fish_category,data_merge$ndc_category,sep="_")
+# data_merge$fishflood_category <- paste(data_merge$fish_category,data_merge$flood_category,sep="_")
+# data_merge$ndcflood_category <- paste(data_merge$ndc_category,data_merge$flood_category,sep="_")
+# data_merge$all_category <- paste(data_merge$ndc_category,data_merge$flood_category, data_merge$fish_category, sep="_")
+#
+# ###################################
+# # Prepare US gages geospatial data
+# ###################################
+# #Read the feature class of gages
+# fgdb = "F:/Miscellaneous/Hydro_classes/Figures/Figure_1_map/Figure1_map.gdb"
+# gagefc = readOGR(dsn=fgdb,layer="allgages_merge_manual_hist")
+# #Change column names
+# dischargecast<-read.csv("F:/Miscellaneous/Hydro_classes/discharge_yearly_cast_all.csv",colClasses=c(rep("character",3), rep("numeric",156)))
+# colnames(gagefc@data)[9:164] <- colnames(dischargecast[,4:159])
+# #Remove gages with NA values (46 gages/23k)
+# gagefc <- gagefc[!is.na(gagefc@data$X1861),]
+#
+# ###################################
+# # Prepare US basins geospatial data
+# ###################################
+#
+# # Import basins shapefile
+# folder = "F:/Miscellaneous/Hydro_classes/Figures/Figure_3"
+# fc = readOGR(dsn=folder,layer="HUC6")
+# # Determine the FC extent, projection, and attribute information
+# class(fc)
+# summary(fc)
+# #Merge shapefile with attributes
+# fc_merge <- merge(fc, data_merge, by="HUC6",all.x=T)
+#
+# #Simplify polygons to reduce load time
+# summary(fc_merge)
+# object.size(fc_merge)
+# simplified <- rmapshaper::ms_simplify(fc_merge)
+# object.size(simplified)
+# 
+# #Prepare hatched polygons to represent basins with high gaging density decline risk
+# #Twicked from https://statnmap.com/en/2017/05/how-to-fill-a-hatched-area-polygon-with-holes-in-leaflet-with-r/
+# #hatched.SpatialPolygons didn't work so had to troubleshoot the function to generate hatches + didn't need to have the 'holes' functionality
+# #Can change density and angle for aesthetics
+# #Select basins with high decline risk
+# extsimplified <- simplified[simplified@data$Quasiext.huc6 >= 0.5 & !is.na(simplified@data$Quasiext.huc6),]
+# density = 5
+# angle = 45
+# fillOddEven = FALSE
+# #Make sure that input isspatialPolygons 
+# if (!is(extsimplified, "SpatialPolygons"))
+#   stop("Not a SpatialPolygons object")
+# 
+# n <- length(slot(extsimplified, "polygons"))
+# polys <- slot(extsimplified, "polygons")
+# pO <- slot(extsimplified, "plotOrder")
+# 
+# if (length(density) != n)
+#   density <- rep(density, n, n)
+# if (length(angle) != n)
+#   angle <- rep(angle, n, n)
+# 
+# all.Lines <- list()
+# all.Lines.ID <- numeric(0)
+# 
+# for (j in pO) {
+#   print(j)
+#   ID = polys[[j]]@ID
+#   Sr <- polys[[j]]
+#   if (!is(Sr, "Polygons"))
+#     stop("Not a Polygons object")
+# 
+#   pO2 <- slot(Sr, "plotOrder")
+#   polys2 <- slot(Sr, "Polygons")
+#   #print(pO2)
+# 
+#   all.Lines2 <- list()
+#   for (i in pO2) {
+#     #print(i)
+#     if (!slot(polys2[[i]], "hole")) {
+#       # Transform polygon as parallel lines
+#       lines.hatch <- polygon.fullhatch(slot(polys2[[i]], "coords"),
+#                                        density = density[j], angle = angle[j], fillOddEven = fillOddEven)
+#       #The code wasn't working when the polygon was so small that no line could go through it/be calculated (e.g. island of HUC6 040301)
+#       # So skip very small polygons in multi-polygon records
+#       if (!is.null(lines.hatch)) {
+#         # Transform as SpatialLines
+#         Lines.i <- SpatialLines(list(Lines(
+#           apply(lines.hatch, 1,
+#                 function(x) Line(cbind(c(x[1], x[3]), c(x[2], x[4])))),
+#           ID = i)))
+# 
+#         # Clean Lines if over a "hole"
+#         Lines.i.holes <- rgeos::gIntersection(Lines.i, SpatialPolygons(list(Sr)),
+#                                               drop_lower_td = TRUE)
+# 
+#         if (!is.null(Lines.i.holes)) {
+#           Lines.i.holes@lines[[1]]@ID <- paste0(ID, ".", i)
+#           all.Lines2[[length(all.Lines2) + 1]] <- Lines.i.holes@lines[[1]]
+#         }
+#       } else {
+#         print('skip')
+#       }
+#     }
+#   }
+#   all.Lines.ID <- c(all.Lines.ID, rep(polys[[j]]@ID, length(all.Lines2)))
+#   all.Lines[length(all.Lines) + 1:length(all.Lines2)] <- all.Lines2
+# }
+# # Correct ID
+# SpatialLinesDF <- SpatialLinesDataFrame(
+#   SpatialLines(all.Lines),
+#   data = data.frame(ID = all.Lines.ID),
+#   match.ID = FALSE)
+#
+# ################################
+# #Add metadata files to workspace
+# ################################
+# readme <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_6/www/README.txt')
+# metadata <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_6/www/metadata_columns.csv')
+
+# save.image()
