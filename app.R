@@ -15,7 +15,6 @@ library(DT)
 library(rsconnect)
 library(grid)
 library(gridExtra)
-library(readtext)
 #library(hddtools) to access GRDC data
 #For hatched polygons
 #devtools::install_github("statnmap/HatchedPolygons", build_vignettes = TRUE)
