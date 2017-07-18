@@ -372,9 +372,9 @@ ui <- navbarPage(title=HTML('<div><a href="http://www.sciencemag.org/journal-dep
                          h2("Contact information and source code"),
                          HTML('
                               <p>Original publication: Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Consistent freshwater resource monitoring for a changing world" Science XXXXXXXXXXXX</br>
-                              Map developer: Mathis Messager (email: messamat@uw.edu) </br>
+                              App developer: Mathis Messager (email: messamat@uw.edu) </br>
                               Study source code: github link </br>
-                              Map source code: github link </br>')
+                              <a href="https://github.com/messamat/Ruhietal2017_Shinyapp" target="_blank">Map source code</a></br>')
                          )
 )
 
