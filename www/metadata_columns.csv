@@ -1,13 +1,14 @@
 Variable name,Type,Label
+NAME,char,HUC6 name
 HUC6,char,HUC6 identification code
 Quasiext.huc6,num,Estimated probability that streamgaging density will be halved by 2023 in basin
-EWU,num,Average Endemism weighted richness/units among HUC8 sub-basins within HUC6 basin
-TE_EWU_numb,num,Average Endemism weighted richness/units for threatened and endangered species among HUC8 sub-basins within HUC6 basin
-TE_count,num,Average number of threatened and endangered species among HUC8 sub-basins within HUC6 basin
-NDC_HUC,num,"Water scarcity measured as Normalized Deficit Cumulated (NDC, Devineni et al. 2015) aggregated to HUC6 basin"
-totalpop,num,Estimated population living within HUC6 basin (2010 census)
-flood_FEMA,num,Percentage of the total population inhabiting areas where a flood study exists that lives in a 100-yr flood zone
-FEMA_total,num,Percentage of the total population that inhabits areas where a flood study exists
-fish_category,char,Category used in plotting fish biodiversity
 ndc_category,char,Category used in plotting water scarcity
+NDC_HUC,num,"Water scarcity measured as Normalized Deficit Cumulated (NDC, Devineni et al. 2015) aggregated to HUC6 basin"
 flood_category,char,Category used in plotting flood risk
+flood_FEMA,num,Percentage of the total population inhabiting areas where a flood study exists that lives in a 100-yr flood zone
+fish_category,char,Category used in plotting fish biodiversity
+EWU,num,Average Endemism weighted richness/units among HUC8 sub-basins within HUC6 basin
+TE_EWU,num,Average Endemism weighted richness/units for threatened and endangered species among HUC8 sub-basins within HUC6 basin
+TE_count,num,Average number of threatened and endangered species among HUC8 sub-basins within HUC6 basin
+totalpop,num,Estimated population living within HUC6 basin (2010 census)
+FEMA_total,num,Percentage of the total population that inhabits areas where a flood study exists
