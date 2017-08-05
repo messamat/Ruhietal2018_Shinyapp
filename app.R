@@ -74,11 +74,12 @@ gagefc$links <- paste0('<a href="https://waterdata.usgs.gov/nwis/inventory?agenc
                        gagefc$allgages_merge_manual_site_no,
                        '" target="_blank">Access data</a>')
 #For US basins
-polypopup <- paste0("<strong>HUC6 name: </strong>", simplified$HUC6,
+polypopup <- paste0("<strong>HUC6 name: </strong>", simplified$NAME,
+                    "<br><strong>ID: </strong>", simplified$HUC6,
                     "<br><strong>Decline risk: </strong>", round(100*as.numeric(simplified$Quasiext.huc6),2),"%",
                     "<br><strong>NDC: </strong>", round(as.numeric(simplified$NDC_HUC),2),
-                    "<br><strong>EWU: </strong>", round(as.numeric(simplified$EWU),2),
-                    "<br><strong>Flood risk: </strong>", round(100*as.numeric(simplified$flood_FEMA),2),"%")
+                    "<br><strong>Flood risk: </strong>", round(100*as.numeric(simplified$flood_FEMA),2),"%",
+                    "<br><strong>EWU: </strong>", round(as.numeric(simplified$EWU),2))
 
 
 ###########################################################################################################################################################
@@ -87,6 +88,59 @@ ui <- navbarPage(title=HTML('<div><a href="http://www.sciencemag.org/journal-dep
                  #theme="http://bootswatch.com/simplex/bootstrap.css", #for local/RStudio and shiny-server
                  #shinytheme() from shinythemes package must be avoided because it conflicts with bsModal in shinyBS.
                  id="nav",
+                 
+                 tabPanel(title="United States",value="US",
+                          div(class="outer",
+                              leafletOutput("USmap", width = "100%", height = "100%"),
+                              absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+                                            draggable = FALSE, top = 60, left = "auto", right = 20, bottom = "auto",
+                                            width = 330, height = "auto",
+                                            wellPanel(
+                                              uiOutput("checkboxgroupUS"),
+                                              p(HTML("<strong>USGS hydrometric network</strong>")),
+                                              checkboxInput("gagechkact", label="Active streamgages", value=T),
+                                              checkboxInput("gagechkdeact", label="Deactivated streamgages", value=F),
+                                              sliderInput("gageyear", strong("Year of stream age activity"), min=1870, max=2016, value=2016,
+                                                          step = 1, round=T, sep=""),
+                                              bsTooltip(id="gageyear", title=paste0("Change the year to see how the US stream gage network changed over time.",
+                                                                                    " The size of the points changes among gages and over time based on the number of years of data recorded until that year"),
+                                                        "left",options = list(container = "body"))
+                                            )
+                              )
+                          )
+                 ),
+                 
+                 tabPanel("Explore US data",
+                          div(class="outer",
+                              tags$head(tags$script(src = "message-handler.js")), #Allow for pop-up message when user does not select any basin, see https://shiny.rstudio.com/articles/action-buttons.html
+                              fluidRow(
+                                checkboxGroupInput("checkcat", label = h3("Subset by high threat category"), 
+                                                   choices = list("Streamgaging decline risk" = "dec",
+                                                                  "Water scarcity" = "scar",
+                                                                  "Flood risk" = "flood",
+                                                                  "Fish diversity" = "fish"),
+                                                   selected = NULL,
+                                                   width = 500)
+                              ),
+                              fluidRow(
+                                DT::dataTableOutput("table")
+                              ),
+                              fluidRow(column(2,
+                                              downloadButton('save', 'Save basin data for selected threats')
+                                              ),
+                                       column(2,
+                                              downloadButton('saveselected', 'Save gage data for selected basins')
+                                              ),
+                                       column(2,
+                                              actionButton("zoom", label = "Zoom to selected basin"),
+                                              bsTooltip(id="zoom", 
+                                               title="Select a row in the table and click here to zoom to the selected basin", 
+                                               placement="bottom", trigger="hover")
+                                              ),
+                                       column(1,offset=-1,
+                                              actionButton("clear", label= "Clear selection"))
+                                       )
+                              )),
                  
                  tabPanel("World", value="wrld",
                           div(class="outer",
@@ -99,14 +153,14 @@ ui <- navbarPage(title=HTML('<div><a href="http://www.sciencemag.org/journal-dep
                               leafletOutput("Worldmap", width = "100%", height = "100%"),
                               absolutePanel(id = "plots", class = "panel panel-default", fixed = TRUE,
                                             draggable = FALSE, top = 60, left = "auto", right = 20, bottom = "auto",
-                                            width = 330, height = "auto",
+                                            width = 350, height = "auto",
                                             wellPanel(
-                                              h2("Streamgage explorer"),
+                                              h4("GRDC hydrometric network explorer"),
                                               p("Gages within map bounds"),
                                               
                                               plotOutput("BoundYears", height = 350),
                                               br(),
-                                              sliderInput(inputId="gageyearworld", label="Year of streamgage reporting:", min=1806, max=2015, value=2015,
+                                              sliderInput(inputId="gageyearworld", label="Year of streamgage reporting:", min=1806, max=2015, value=2010,
                                                             step = 1, round=T, sep=""),
                                               bsTooltip(id="gageyearworld", title=paste0("Change the year to see how the GRDC stream gage network changed over time.",
                                                                                          " The size of the points changes among gages and over time based on the number of years of data recorded until that year"),
@@ -123,55 +177,6 @@ ui <- navbarPage(title=HTML('<div><a href="http://www.sciencemag.org/journal-dep
                               
                           )
                  ),
-                 
-                tabPanel(title="United States",value="US",
-                         div(class="outer",
-                             leafletOutput("USmap", width = "100%", height = "100%"),
-                             absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
-                                           draggable = FALSE, top = 60, left = "auto", right = 20, bottom = "auto",
-                                           width = 330, height = "auto",
-                                           wellPanel(
-                                             uiOutput("checkboxgroupUS"),
-                                             p(HTML("<strong>Visualize hydrometric network</strong>")),
-                                             checkboxInput("gagechk", label="Streamgages", value=F),
-                                             sliderInput("gageyear", "Years of stream age activity:", min=1861, max=2016, value=2016,
-                                                       step = 1, round=T, sep=""),
-                                             bsTooltip(id="gageyear", title=paste0("Change the year to see how the US stream gage network changed over time.",
-                                                                                        " The size of the points changes among gages and over time based on the number of years of data recorded until that year"),
-                                                       "left",options = list(container = "body"))
-                                           )
-                             )
-                         )
-                ),
-                
-                tabPanel("Explore US data",
-                         div(class="outer",
-                             tags$head(tags$script(src = "message-handler.js")), #Allow for pop-up message when user does not select any basin, see https://shiny.rstudio.com/articles/action-buttons.html
-                           fluidRow(
-                               checkboxGroupInput("checkcat", label = h3("Subset by threat category"), 
-                                                  choices = list("High streamgaging decline risk" = "dec",
-                                                                 "High water scarcity" = "scar",
-                                                                 "High flood risk" = "flood",
-                                                                 "High fish biodiversity" = "fish"),
-                                                  selected = NULL)
-                             ),
-                           fluidRow(
-                                 DT::dataTableOutput("table")
-                               ),
-                           fluidRow(column(1,
-                                           downloadButton('save', 'Save')
-                                           ),
-                                    column(4,
-                                           actionButton("zoom", label = "Zoom to selected basin/Remove selection"),
-                                           bsTooltip(id="zoom", 
-                                                     title="Select a row in the table and click here to zoom to the selected basin. To remove pulsing marker, unselect the row and click again", 
-                                                     placement="bottom", trigger="hover")
-                                           ),
-                                    column(1,offset=2,
-                                           textOutput("norow"))
-                                 )
-                         )
-                ),
                 
                 tabPanel("About",
                          h2("About this application"),
@@ -206,7 +211,7 @@ ui <- navbarPage(title=HTML('<div><a href="http://www.sciencemag.org/journal-dep
 server <- function(input, output, session) {
   ######################################################CUSTOM FUNCTIONS ####################################################################
   #Custom function to make circle legends from https://stackoverflow.com/questions/37446283/creating-legend-with-circles-leaflet-r
-  addLegendCustom <- function(map, colors, labels, sizes, opacity = 0.5){
+  addLegendCustom <- function(map, colors, labels, sizes, opacity = 0.75){
     colorAdditions <- paste0(colors, "; width:", sizes, "px; height:", sizes, "px")
     labelAdditions <- paste0("<div style='display: inline-block;height: ", sizes, "px;margin-top: 4px;line-height: ", sizes, "px;'>", labels, "</div>")
     
@@ -243,132 +248,67 @@ server <- function(input, output, session) {
           });
         ")))
   }
-  ###################################################### WORLD TAB ####################################################################
-  ###########################
-  # World gaging network map
-  ###########################
-  #Set up basic map
-  output$Worldmap <- renderLeaflet({
-    leaflet() %>%
-      setView(lng = 34, lat = 28, zoom = 2) %>%
-      addTiles(urlTemplate = "//{s}.tiles.mapbox.com/v3/jcheng.map-5ebohr46/{z}/{x}/{y}.png",
-               attribution = 'Maps by <a href="http://www.mapbox.com/">Mapbox</a>',
-               options = tileOptions(opacity=0.5)) %>%
-      addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery", options = providerTileOptions(opacity=0.75)) %>%
-      addProviderTiles(providers$Esri.OceanBasemap, group = "World Physical", options = providerTileOptions(opacity=0.75)) %>%
-      addLegendCustom(colors = c("#fc4e2a","#252525"), labels = c("Reporting", "Reporting discontinued"), sizes = c(10, 10)) %>%
-      addLayersControl(
-        baseGroups = c("OSM (default)",
-                       "World Imagery",
-                       "World Physical"),
-        position="bottomleft",
-        options = layersControlOptions(collapsed = TRUE))
-  })
   
-  #Display gages based on selected data in the toggle bar
-  observe({
-    #Subset gages based on toggle bar input
-    worldgages_subset <- GRDCdat[GRDCdat@data$t_start <= input$gageyearworld & GRDCdat@data$t_end >= input$gageyearworld,]
-    worldgages_extinct <- GRDCdat[GRDCdat@data$t_start <= input$gageyearworld & GRDCdat@data$t_end < input$gageyearworld,]
-    #Edit popup for gages based on number of years of data reported by that gage until selected year in toggle bar
-    worldgagepop <- paste("Years of data in",input$gageyearworld,":", input$gageyearworld-worldgages_subset$t_start) 
-    #Add gages to map
-    leafletProxy("Worldmap") %>%
-      clearGroup(group="World gages") %>%
-      clearGroup(group="World gages extinct") %>%
-      #The size of gages that do not report is independent of the selected year
-      addCircles(data= worldgages_extinct,weight = 1,radius = ~200*(t_yrs), 
-                 group="World gages extinct", color="#252525",fillOpacity = 0.4) %>%
-      addCircles(data = worldgages_subset, weight = 1,radius = ~200*(input$gageyearworld-t_start), 
-                 group="World gages",label=worldgagepop, color="#fc4e2a",fillOpacity = 0.8)
-  })
-  
-  ################################################
-  # Make reactive graphs based on display bounds 
-  ################################################
-  # A reactive expression that returns the set of gages that are in bounds right now
-  gagesinbounds <- reactive({
-    if (is.null(input$Worldmap_bounds))
-      return(as.data.frame(GRDCdat@data))
-    bounds <- input$Worldmap_bounds
-    latRng <- range(bounds$north, bounds$south)
-    lngRng <- range(bounds$east, bounds$west)
-    as.data.frame(GRDCdat[GRDCdat@coords[,2] >= latRng[1] & GRDCdat@coords[,2] <= latRng[2] &
-                            GRDCdat@coords[,1] >= lngRng[1] & GRDCdat@coords[,1] <= lngRng[2],]@data)
-  })
-  
-  #Build plots
-  output$BoundYears <- renderPlot({
-    # If no gages in view, don't plot
-    if (nrow(gagesinbounds()) == 0)
-      return(NULL)
-    gagerec <- data.frame(year=min(gagesinbounds()$t_start):max(gagesinbounds()$t_end), count=NA)
-    gagerec_activity <- data.frame(GRDCdat$grdc_no)
-    for (i in min(gagesinbounds()$t_start):max(gagesinbounds()$t_end)) {
-      gagerec[gagerec$year == i,"count"] <- length(which(gagesinbounds()$t_start <= i & gagesinbounds()$t_end >= i))
-    }
-    hist <- ggplot(data=gagesinbounds(), aes(x=t_yrs)) + geom_histogram(fill="#fc4e2a", bins = 20) +
-      labs(x="Number of years of record in 2015", y="Number of gages") +
-      theme_classic() + 
-      theme(text = element_text(size = 14))
-    line <- ggplot(data=gagerec, aes(x=year,y=count)) + geom_line(color="#fc4e2a", size=1.5) +
-      labs(x="Year", y="Reporting streamgages") + 
-      scale_x_continuous(limits=c(1806,2015)) +
-      geom_vline(xintercept=input$gageyearworld, size=1.25) + #Create a vertical line on plot whose x position depends on the selected date in toggle bar
-      theme_classic()+ 
-      theme(text = element_text(size = 14))
-    grid.arrange(hist, line, ncol=1)
-  })
-  
-  #Add popover for plot
-  addPopover(session, "BoundYears", title="Plots", content=HTML(paste0(
-    'Both of these plots are based on the stream gages within the displayed area and change as you zoom in and pan around.
-    </br></br>- The top plot shows the frequency distribution of the number of years of data the gages within the displayed area reported to the GRDC by 2016
-    </br></br>- The bottom plot shows the number of reporting stream gages over time within the displayed area')), 
-    placement="left", trigger="hover")
+  #Function to get USGS TNM base maps as tiles
+  GetURL <- function(service, host = "basemap.nationalmap.gov") {
+    sprintf("https://%s/arcgis/services/%s/MapServer/WmsServer", host, service)
+  }
   
   ################################################### United States tab ##########################################################################
   ###########################
-  # World gaging network map
+  # USGS gaging network map
   ###########################
+  #Get US National Maps ready (from https://owi.usgs.gov/blog/basemaps/)
+  #Specify line of attribution text to display in the map
+  att <- paste0("<a href='https://www.usgs.gov/'>",
+                "U.S. Geological Survey</a> | ",
+                "<a href='https://www.usgs.gov/laws/policies_notices.html'>",
+                "Policies</a>")
+  
   #Set up basic map
   output$USmap <- renderLeaflet({
     leaflet() %>%
       setView(lng = -98.5795, lat = 39.8282, zoom = 4) %>%
-      addTiles(group = "OSM (default)") %>%
+      addProviderTiles(provider = "Hydda.Base", group = "Hydrography base") %>%
+      addTiles(group = "OSM") %>%
       addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery") %>%
       addProviderTiles(providers$Esri.OceanBasemap, group = "World Physical", options = providerTileOptions(opacity=0.75)) %>%
+      addWMSTiles(GetURL("USGSHydroCached"), group= "Hydrography", options = WMSTileOptions(format = "image/png", transparent = TRUE), layers="0") %>%
       addLayersControl(
-        baseGroups = c("OSM (default)",
+        baseGroups = c("Hydrography base",
+                       "OSM",
                        "World Physical",
                        "World Imagery"),
+        overlayGroups = c("Hydrography"),
         position="bottomleft",
-        options = layersControlOptions(collapsed = TRUE))
+        options = layersControlOptions(collapsed = TRUE)) %>%
+      hideGroup("Hydrography")
   })
   
   #Create action buttons to select threats to display including tooltips from custom function
   #Example code from https://stackoverflow.com/questions/36670065/tooltip-in-shiny-ui-for-help-text/36696224#36696224
   output$checkboxgroupUS <-   renderUI({
     list(
-      checkboxGroupInput("chck",  label=tags$span(HTML("<strong>Select basin-level threat category</strong>"),   
+      checkboxGroupInput("chck",  label=tags$span(HTML("<strong>Basin-level threat category</strong>"),   
                                                   tipify(icon("info-circle"), title=HTML("For more information about threats, refer to Methodology in the <i>About</i> tab"))),
                          choices = list("High streamgaging decline risk" = "dec",
-                                        "High water scarcity" = "scar",
-                                        "High flood risk" = "flood",
-                                        "High fish biodiversity" = "fish"),
+                                        "Water scarcity" = "scar",
+                                        "Flood risk" = "flood",
+                                        "Fish diversity" = "fish"),
                          selected = NULL),
       makeCheckboxTooltip(checkboxValue = "dec", 
-                          Tooltip = "<strong>Basin with >50% risk of having its gage network density halved by 2023</strong>"),
+                          Tooltip = "<strong>Basins with >50% risk of having their gage network density halved by 2023</strong>"),
       makeCheckboxTooltip(checkboxValue = "scar", 
                           Tooltip = HTML(paste0(
-        "<strong>Basin with Normalized Deficit Cumulated (NDC) > 1</strong>",
+        "<strong>High water scarcity: basins with Normalized Deficit Cumulated (NDC) > 1</strong>",
         "<br>The NDC is equal to the maximum cumulative deficit between average daily water demand in 2010 and local daily renewable supply from 1949 to 2010, ",
-        "divided by the average annual rainfall volume in that basin (Devineni et al. 2015)."))),
+        "divided by the average annual rainfall volume in that basin (Devineniet et al. 2015)."))),
+      #"<a href='http://onlinelibrary.wiley.com/wol1/doi/10.1002/2015GL063487/full' target='_blank'>Devineni et al. 2015</a></br>",
       makeCheckboxTooltip(checkboxValue = "flood", 
-                          Tooltip = "<strong>Basin with >5% of the population living within a 100-year flood zone</strong>"),
+                          Tooltip = "<strong>High flood risk: basins with >5% of the population living within a 100-year flood zone</strong>"),
       makeCheckboxTooltip(checkboxValue = "fish", 
                           Tooltip = HTML(paste0(
-        "<strong>Basin with endemism weighted richness/units (EWU) > 0.28 (median value)</strong>",
+        "<strong>High fish diversity: basins with endemism weighted richness/units (EWU) > 0.28 (median value)</strong>",
         "<br>EWU is the sum of the portion of each species' range contained within the basin. It expresses both the richness and degree of endemism of species.")))
     )
   })
@@ -399,7 +339,7 @@ server <- function(input, output, session) {
           addPolygons(data=simplified, weight = 1, smoothFactor = 0.5, fillColor = ~ndcpal(ndc_category), color = ~ndcpal(ndc_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
-          addLegend(position="bottomleft", colors=c('#D66460', "#E8E8E8", "#ffffff"), labels=c("Water scarce", "Not water scarce","Less than 10 streamgages in basin"),
+          addLegend(position="bottomleft", colors=c('#D66460', "#E8E8E8", "#ffffff"), labels=c("High (NDC > 1)", "Low (NDC < 1)","Insufficient gage data"),
                     title="Water scarcity", opacity=1,layerId="basins")
       }
     #If only flood risk is selected
@@ -410,7 +350,7 @@ server <- function(input, output, session) {
           addPolygons(data=simplified,weight = 1, smoothFactor = 0.5, fillColor = ~floodpal(flood_category), color = ~floodpal(flood_category),fillOpacity = 0.8, opacity =0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
-          addLegend(position="bottomleft", colors=c('#69ABC0', "#E8E8E8","#ffffff"), labels=c('>5% population','<5% population','Less than 10 streamgages in basins'), 
+          addLegend(position="bottomleft", colors=c('#69ABC0', "#E8E8E8","#ffffff"), labels=c('High (> 5% population)','Low (< 5% population)','Insufficient gage data'), 
                     title="Flood risk", opacity=1,layerId="basins")
       }
     #If only fish diversity is selected
@@ -421,7 +361,7 @@ server <- function(input, output, session) {
           addPolygons(data=simplified,weight = 1, smoothFactor = 0.5, fillColor = ~fishpal(fish_category), color = ~fishpal(fish_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
-          addLegend(position="bottomleft", colors=c('#006d2c', "#E8E8E8","#ffffff"), labels=c('> median EWU', '< median EWU', 'Less than 10 streamgages in basins'),
+          addLegend(position="bottomleft", colors=c('#006d2c', "#E8E8E8","#ffffff"), labels=c('High (> median EWU)', 'Low (< median EWU)', 'Insufficient gage data'),
                     title="Fish diversity", opacity=1,layerId="basins")
       }
       
@@ -438,8 +378,8 @@ server <- function(input, output, session) {
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft",
                     colors=c('#000000','#006d2c', '#D66460',"#E8E8E8","#ffffff"), 
-                    labels=c("High EWU and water scarce", "High EWU and not water scarce","Low EWU and water scarce","Low EWU and not water scarce", "Less than 10 streamgages in basin"),
-                    title="Fish biodiversity and Water scarcity", opacity=1,layerId="basins")
+                    labels=c("High diversity/High scarcity", "High diversity/Low scarcity","Low diversity/High scarcity","Low diversity/Low scarcity", "Insufficient gage data"),
+                    title="Fish diversity/Water scarcity", opacity=1,layerId="basins")
     }
     #If only fish diversity and flood risk are selected
       if (("fish" %in% input$chck) && ("flood" %in% input$chck) && !("scar" %in% input$chck)) {
@@ -451,8 +391,8 @@ server <- function(input, output, session) {
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft",
                     colors=c('#000000','#006d2c','#69ABC0', "#E8E8E8","#ffffff"), 
-                    labels=c("High EWU and high flood risk", "High EWU and low flood risk","Low EWU and high flood risk","Low EWU and low flood risk", "Less than 10 streamgages in basin"),
-                    title="Fish biodiversity and Flood risk", opacity=1,layerId="basins")
+                    labels=c("High diversity/High risk", "High diversity/Low risk","Low diversity/High risk","Low diversity/Low risk", "Insufficient gage data"),
+                    title="Fish diversity/Flood risk", opacity=1,layerId="basins")
       }
       #If only water scarcity and flood risk are selected
       if (("scar" %in% input$chck) && ("flood" %in% input$chck)&& !("fish" %in% input$chck)) {
@@ -464,8 +404,8 @@ server <- function(input, output, session) {
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft",
                     colors=c('#000000','#D66460', '#69ABC0',"#E8E8E8","#ffffff"), 
-                    labels=c("Water scarce and high flood risk", "Water scarce and low flood risk","Not water scarce and high flood risk","Not water scarce and low flood risk", "Less than 10 streamgages in basin"),
-                    title="Fish biodiversity and Water scarcity", opacity=1,layerId="basins")
+                    labels=c("High scarcity/High risk", "High scarcity/Low risk","Low scarcity/High risk","Low scarcity/Low risk", "Insufficient gage data"),
+                    title="Water scarcity/Flood risk", opacity=1,layerId="basins")
       }
       
     #####################################
@@ -482,17 +422,21 @@ server <- function(input, output, session) {
                   colors=c('#000000','#49006a','#014636','#543005',
                            '#D66460','#006d2c','#69ABC0',
                            "#E8E8E8", "#ffffff"),
-                  labels=c("Water scarce, High flood risk, High EWU","Water scarce, High flood risk, Low EWU","Not water scarce, High flood risk, High EWU","Water scarce, Low flood risk, High EWU",
-                           "Water scarce, Low flood risk, Low EWU","Not water scarce, Low flood risk, Low EWU","Not water scarce, High floosk risk, Low EWU",
-                           "Not water scarce, Low flood risk, Low EWU","Less than 10 streamgages in basin"),
-                  title="Water scarcity, flood risk, and fish diversity", opacity=1,layerId="basins")
+                  labels=c("High scarcity/High risk/High diversity","High scarcity/High risk/Low diversity","Low scarcity/High risk/High diversity","High scarcity/Low risk/High diversity",
+                           "High scarcity/Low risk/Low diversity","Low scarcity/Low risk/High diversity","Low scarcity/High risk/Lowdiversity",
+                           "Low scarcity/Low risk/Low diversity","Insufficient gage data"),
+                  title="Water scarcity/Flood risk/Fish diversity", opacity=1,layerId="basins")
     }
     #####################################
     # ADD HATCHING FOR DECLINE RISK
     #####################################
     if ("dec" %in% input$chck) {
       leafletProxy("USmap") %>%
-        addPolylines(data= SpatialLinesDF, weight=1, color="#000000", opacity = 0.5,group="Quasi-extinction probability",popup=polypopup) 
+        addPolylines(data= SpatialLinesDF, weight=1, color="#000000", opacity = 0.5,group="Quasi-extinction probability",
+                     #SpatialLinesDF IDs stem from the polygons ID slot from the HUC6 polygon dataframe (simplified)
+                     #while the HUC6 dataframe row numbers start by 1, polygons IDs start by 0, so you need to add+1 to SpatialLinesDF IDs to match them back to the HUC6 dataframe 
+                     popup=polypopup[as.numeric(as.character(SpatialLinesDF@data$ID))+1]) 
+
     } else {
       leafletProxy("USmap") %>%
         clearGroup("Quasi-extinction probability")
@@ -502,23 +446,44 @@ server <- function(input, output, session) {
 
   #Create subset of gages based on date selected on toggle bar
   observe({
-    if (input$gagechk) {
+    #If either active or inactive gages are displayed
+    if (input$gagechkact | input$gagechkdeact) {
+      #Make a subset of gages based on the selected year in the toggle bar
+      gagefc@data$actyr <- rowSums(gagefc@data[,paste0("X",1861:input$gageyear)])
       fcgages_subset <- gagefc[gagefc@data[,paste0("X",input$gageyear)]==1,]
-      fcgages_extinct <- gagefc[gagefc@data[,paste0("X",input$gageyear)]==0 & rowSums(gagefc@data[,paste0("X",1861:input$gageyear)]) > 0,]
-      fcgages_subset@data$actyr <- rowSums(fcgages_subset@data[,paste0("X",1861:input$gageyear)])
-      gagesubclickpop <- paste0("<strong>Site Number: </strong>", fcgages_subset$allgages_merge_manual_site_no,
-                             "<br>",fcgages_subset$links)
-      gageextclickpop <- paste0("<strong>Site Number: </strong>", fcgages_extinct$allgages_merge_manual_site_no,
-                                "<br>",fcgages_extinct$links)
-      gagepop <- paste("Years of data in",input$gageyear,":", fcgages_subset$actyr)
+      
+      #If the deactived gages box is checked
+      if (input$gagechkdeact) {
+        fcgages_extinct <- gagefc[gagefc@data[,paste0("X",input$gageyear)]==0 & rowSums(gagefc@data[,paste0("X",1861:input$gageyear)]) > 0,]
+        gageextclickpop <- paste0("<strong>Site Number: </strong>", fcgages_extinct$allgages_merge_manual_site_no,
+                                  "<br>",fcgages_extinct$links)
+        leafletProxy("USmap") %>%
+          clearGroup(group="Stream gages extinct") %>%
+          addCircles(data= fcgages_extinct,weight = 1,radius = (~actyr*200), 
+                     group="Stream gages extinct", popup=gageextclickpop, color="#252525",fillOpacity = 0.4)
+      } else {
+        leafletProxy("USmap") %>%
+          clearGroup(group="Stream gages extinct")
+      }
+      
+      #If the 'active gages' box is checked
+      if (input$gagechkact) {
+        fcgages_subset@data$actyr <- rowSums(fcgages_subset@data[,paste0("X",1861:input$gageyear)])
+        gagesubclickpop <- paste0("<strong>Site Number: </strong>", fcgages_subset$allgages_merge_manual_site_no,
+                                  "<br>",fcgages_subset$links)
+        gagepop <- paste("Years of data in",input$gageyear,":", fcgages_subset$actyr)
+        leafletProxy("USmap") %>%
+          clearGroup(group="Stream gages") %>%
+          addCircles(data = fcgages_subset, weight = 1,radius = (~actyr*200), 
+                     group="Stream gages", label=gagepop, popup=gagesubclickpop, color="#fc4e2a",fillOpacity = 0.6)
+      } else {
+        leafletProxy("USmap") %>%
+          clearGroup(group="Stream gages")
+      }
+      
+    #Either way, clear the previous legend if there was one and add one (clear the previous one so that legends don't keep accumulating)
       leafletProxy("USmap") %>%
-        clearGroup(group="Stream gages") %>%
-        clearGroup(group="Stream gages extinct") %>%
         removeControl("gage") %>%
-        addCircles(data= fcgages_extinct,weight = 1,radius = (~ACTIVE_YEARS*200), 
-                   group="Stream gages extinct", popup=gageextclickpop, color="#252525",fillOpacity = 0.4) %>%
-        addCircles(data = fcgages_subset, weight = 1,radius = (~actyr*200), 
-                   group="Stream gages", label=gagepop,popup=gagesubclickpop, color="#fc4e2a",fillOpacity = 0.6) %>%
         addLegendCustom(colors = c("#fc4e2a","#252525"), labels = c("Active", "Deactivated"), sizes = c(10, 10))
     } else {
       leafletProxy("USmap") %>%
@@ -531,7 +496,7 @@ server <- function(input, output, session) {
   ################################################ EXPLORE US DATA TAB ###############################################################
   #Make data selection based on checkbox
   tabdat <- reactive ({
-    data_merge_sel <- data_merge
+    data_merge_sel <- data_merge_format
     if ("dec" %in% input$checkcat) {
       data_merge_sel <- data_merge_sel[data_merge_sel$Quasiext.huc6 >= 0.5,]
     }
@@ -542,56 +507,80 @@ server <- function(input, output, session) {
       data_merge_sel <- data_merge_sel[data_merge_sel$flood_FEMA>= 0.05,]
     }
     if ("fish" %in% input$checkcat) {
-      data_merge_sel <- data_merge_sel[data_merge_sel$EWU>= 0.25,]
+      data_merge_sel <- data_merge_sel[data_merge_sel$EWU>= 0.2754,]
     }
     data_merge_sel
   })
   
   #Render table
   output$table <- DT::renderDataTable(
-    DT::datatable({tabdat()},style='bootstrap', class='compact',selection = 'single', options=list(scrollY=TRUE)) %>% 
-      formatRound(2:12, digits=2)
+    DT::datatable({tabdat()},style='bootstrap', class='compact',selection = "multiple", rownames = F,
+                  colnames = c('Name'=1, 'Decline risk %'=3, 'Water scarcity'=4, 'NDC'=5, 'Flood risk %' = 6, '% pop. in flood zone' = 7, 
+                               'Fish diversity' = 8, 'EWU TE sp.' = 10, 'Average # of TE sp.'=11, 
+                               'Total population'=12, '% pop. in area with flood study'=13),
+                  extensions = 'FixedHeader', options=list(scrollY=TRUE, fixedHeader = TRUE)) %>% 
+      formatRound(c(3,5,7,9,10,11,13), digits=2)
   )
 
   #Allow for user to zoom in to selected basin
   #If user has not been on US tab, then the action button only change tab and does not zoom in -- but functions the second time
+  proxy = dataTableProxy('table')
+  
   observeEvent(input$zoom, {
-    #Switch tab to US
-    updateNavbarPage(session, inputId="nav",selected="US")
     #Send pop-up message if user doesn't select any basin to zoom to and clear the pulsing marker if one was present 
     if (is.null(input$table_rows_selected)){
       #https://shiny.rstudio.com/articles/action-buttons.html
       session$sendCustomMessage(type = 'testmessage',
                                 message = 'You did not select any basin to zoom to/unselected the displayed basin')
-      leafletProxy("USmap") %>%
-        clearGroup("pulse")
     } else {
-      #Get the coordinates of the centroid (labpt attribute of spatial polygon) of the selected basin (first polygon if multi-polygon feature)
-      HUCcentroid<- slot(slot(simplified[simplified@data$HUC6 == tabdat()[input$table_rows_selected,"HUC6"],], 'polygons')[[1]],'labpt') 
+      #Switch tab to US
+      updateNavbarPage(session, inputId="nav",selected="US")
+      #Create shapefile of selected basins
+      selectedHUCs <- simplified[simplified@data$HUC6 %in% tabdat()[input$table_rows_selected,"HUC6"],]
+      #Determine selected polygons' bounding box
+      HUCbbox<- bbox(selectedHUCs)
+      #Add selected basins to US map as red polygon boundaries
       leafletProxy("USmap") %>%
-        clearGroup("pulse") %>% #Clear previous pulsing marker
-        #Add a pulsing marker at the coordinate of the basin's centroid using leaflet.extra functionality (https://github.com/bhaskarvk/leaflet.extras)
-        addPulseMarkers(lng=HUCcentroid[1], lat=HUCcentroid[2],icon = makePulseIcon(heartbeat = 0.5),group='pulse') %>%
-        #Zoom to coordinates of centroid
-        setView(HUCcentroid[1], HUCcentroid[2],zoom=7)
+        clearGroup("selectedHUC") %>% #Clear previous selection
+        addPolygons(data=selectedHUCs, weight = 2, smoothFactor = 0.5, fillColor = 'red', color = 'red',fillOpacity = 0, opacity = 0.8,
+                    group = "selectedHUC", 
+                    highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1),
+                    popup = polypopup[which(simplified$HUC6 %in% selectedHUCs$HUC6)]) %>%
+        fitBounds(HUCbbox[1,1]-1,HUCbbox[2,1]-1,HUCbbox[1,2]+1,HUCbbox[2,2]+1) #Pan/Zoom to polygons' bounding  box
+        
+      #Code to add a pulsing marker at the centroid of a single selected HUC6 basin - replaced by red polygon boudaries to avoid confusion with gage points
+      # #Get the coordinates of the centroid (labpt attribute of spatial polygon) of the selected basin (first polygon if multi-polygon feature)
+      # HUCcentroid<- slot(slot(simplified[simplified@data$HUC6 == tabdat()[input$table_rows_selected,"HUC6"],], 'polygons')[[1]],'labpt') 
+      # leafletProxy("USmap") %>%
+      #   clearGroup("pulse") %>% #Clear previous pulsing marker
+      #   #Add a pulsing marker at the coordinate of the basin's centroid using leaflet.extra functionality (https://github.com/bhaskarvk/leaflet.extras)
+      #   addPulseMarkers(lng=HUCcentroid[1], lat=HUCcentroid[2],icon = makePulseIcon(heartbeat = 0.5),group='pulse') %>%
+      #   #Zoom to coordinates of centroid
+      #   setView(HUCcentroid[1], HUCcentroid[2],zoom=7)
     }
     })
+  
+  observeEvent(input$clear, {
+    proxy %>% selectRows(NULL)
+    leafletProxy("USmap") %>%
+      clearGroup("selectedHUC")
+  })
   
   ########################################################### DATA DOWNLOAD #############################################################################
   #Zipping structure from https://groups.google.com/forum/#!topic/shiny-discuss/zATYJCdSTwk
   #When run locally, can be buggy if Rtools + env.path not correct. Troubleshoot here: https://stackoverflow.com/questions/29129681/create-zip-file-error-running-command-had-status-127
   #In my case adding C:\Rtools\bin was insufficient. Instead, had to add C:\RBuildTools\3.3\bin to PATH in environmental variables
   output$save  <- downloadHandler(
-    filename = 'Ruhietal2017_data.zip',
+    filename = 'Ruhietal2017_basindata.zip',
     content = function(fname) {
       #create temp file
       tmpdir <- tempdir()
       setwd(tempdir())
       print(tempdir())
       #Write three files in temp file
-      write.csv(tabdat()[input[["table_rows_all"]], ], file = "basin_data.csv")
-      write.table(readme, file="README.txt",col.names = F)
-      write.csv(metadata, file="metadata.csv")
+      write.csv(tabdat()[input[["table_rows_all"]], ], file = "basin_data.csv", row.names=F)
+      write.table(readme, file="README.txt",row.names=F)
+      write.csv(metadata, file="metadata.csv", row.names=F)
       #Zip up
       zip(zipfile=fname, files=c("basin_data.csv","metadata.csv", "README.txt"))
       if(file.exists(paste0(fname, ".zip"))) {file.rename(paste0(fname, ".zip"), fname)}
@@ -599,6 +588,114 @@ server <- function(input, output, session) {
     #Tell shiny what type of file it is
     contentType = "application/zip"
   )
+  
+  output$saveselected <- downloadHandler(
+    filename = 'Ruhietal2017_gagedata.zip',
+    content = function(fname_sel) {
+      #create temp file
+      tmpdir <- tempdir()
+      setwd(tempdir())
+      print(tempdir())
+      #Write three files in temp file
+      write.csv(dischargecast[dischargecast$HUC6 %in% tabdat()[input$table_rows_selected, "HUC6"],], file= "selected_basin_gagedata.csv", row.names = F)
+      write.table(readme_gages, file="README.txt",row.names = F)
+      write.csv(metadata_gages, file="metadata.csv", row.names = F)
+      #Zip up
+      zip(zipfile=fname_sel, files=c("selected_basin_gagedata.csv","metadata.csv", "README.txt"))
+      if(file.exists(paste0(fname_sel, ".zip"))) {file.rename(paste0(fname_sel, ".zip"), fname_sel)}
+    },
+    #Tell shiny what type of file it is
+    contentType = "application/zip"
+  )
+  
+  
+  ###################################################### WORLD TAB ####################################################################
+  ###########################
+  # GRDC world gaging network map
+  ###########################
+  #Set up basic map
+  output$Worldmap <- renderLeaflet({
+    leaflet() %>%
+      setView(lng = 34, lat = 28, zoom = 2) %>%
+      addTiles(urlTemplate = "//{s}.tiles.mapbox.com/v3/jcheng.map-5ebohr46/{z}/{x}/{y}.png",
+               attribution = 'Maps by <a href="http://www.mapbox.com/">Mapbox</a>',
+               options = tileOptions(opacity=0.5)) %>%
+      addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery", options = providerTileOptions(opacity=0.75)) %>%
+      addProviderTiles(providers$Esri.OceanBasemap, group = "World Physical", options = providerTileOptions(opacity=0.75)) %>%
+      addCircles(data=  GRDCdat[GRDCdat@data$t_start <= 2010 & GRDCdat@data$t_end < 2010,],weight = 1,radius = ~200*(t_yrs), 
+                 group="World gages extinct", color="#252525",fillOpacity = 0.4) %>%
+      addCircles(data= GRDCdat[GRDCdat@data$t_start <= 2010 & GRDCdat@data$t_end >= 2010,],weight = 1,radius = ~200*(2010-t_start), 
+                 group="World gages", color='#fc4e2a',fillOpacity = 0.4) %>%
+      # addLegendCustom(colors = c("#fc4e2a","#252525"), labels = c("Reporting", "Reporting discontinued"), sizes = c(10, 10)) %>%
+      addLayersControl(
+        baseGroups = c("OSM (default)",
+                       "World Imagery",
+                       "World Physical"),
+        position="bottomleft",
+        options = layersControlOptions(collapsed = TRUE))
+  })
+  
+  #Display gages based on selected data in the toggle bar
+  observeEvent(input$gageyearworld,{
+    worldgages_subset <- GRDCdat[GRDCdat@data$t_start <= input$gageyearworld & GRDCdat@data$t_end >= input$gageyearworld,]
+    worldgages_extinct <- GRDCdat[GRDCdat@data$t_start <= input$gageyearworld & GRDCdat@data$t_end < input$gageyearworld,]
+    #Edit popup for gages based on number of years of data reported by that gage until selected year in toggle bar
+    worldgagepop <- paste("Years of data in",input$gageyearworld,":", input$gageyearworld-worldgages_subset$t_start) 
+    #Add gages to map
+    leafletProxy("Worldmap") %>%
+      clearGroup(group="World gages") %>%
+      clearGroup(group="World gages extinct") %>%
+      #The size of gages that do not report is independent of the selected year
+      addCircles(data= worldgages_extinct,weight = 1,radius = ~200*(t_yrs), 
+                 group="World gages extinct", color="#252525",fillOpacity = 0.4) %>%
+      addCircles(data = worldgages_subset, weight = 1,radius = ~200*(input$gageyearworld-t_start), 
+                 group="World gages",label=worldgagepop, color="#fc4e2a",fillOpacity = 0.8)
+  })
+  
+  ################################################
+  # Make reactive graphs based on display bounds 
+  ################################################
+  # A reactive expression that returns the set of gages that are in bounds right now
+  gagesinbounds <- reactive({
+    if (is.null(input$Worldmap_bounds))
+      return(as.data.frame(GRDCdat@data))
+    bounds <- input$Worldmap_bounds
+    latRng <- range(bounds$north, bounds$south)
+    lngRng <- range(bounds$east, bounds$west)
+    as.data.frame(GRDCdat[GRDCdat@coords[,2] >= latRng[1] & GRDCdat@coords[,2] <= latRng[2] &
+                            GRDCdat@coords[,1] >= lngRng[1] & GRDCdat@coords[,1] <= lngRng[2],]@data)
+  })
+  #Build plots
+  output$BoundYears <- renderPlot({
+    # If no gages in view, don't plot
+    if (nrow(gagesinbounds()) == 0)
+      return(NULL)
+    gagerec <- data.frame(year=min(gagesinbounds()$t_start):max(gagesinbounds()$t_end), count=NA)
+    gagerec_activity <- data.frame(GRDCdat$grdc_no)
+    for (i in min(gagesinbounds()$t_start):max(gagesinbounds()$t_end)) {
+      gagerec[gagerec$year == i,"count"] <- length(which(gagesinbounds()$t_start <= i & gagesinbounds()$t_end >= i))
+    }
+    hist <- ggplot(data=gagesinbounds()[gagesinbounds()$t_start <= 2010,], aes(x=2010-t_start)) + geom_histogram(fill="#fc4e2a", bins = 20) +
+      labs(x="Number of years of record in 2010", y='Number of gages') +
+      theme_classic() + 
+      theme(text = element_text(size = 14))
+    line <- ggplot(data=gagerec, aes(x=year,y=count)) + 
+      geom_line(color="#fc4e2a", size=1.5) +
+      geom_line(data=gagerec[gagerec$year >2010,], color="#969696",size=1.5)+
+      labs(x="Year", y="Reporting streamgages") + 
+      scale_x_continuous(limits=c(1806,2015)) +
+      geom_vline(xintercept=input$gageyearworld, size=1.25) + #Create a vertical line on plot whose x position depends on the selected date in toggle bar
+      theme_classic()+ 
+      theme(text = element_text(size = 14))
+    grid.arrange(hist, line, ncol=1)
+  })
+  
+  #Add popover for plot
+  addPopover(session, "BoundYears", title="Plots", content=HTML(paste0(
+    'Both of these plots are based on the stream gages within the displayed area and change as you zoom in and pan around.
+    </br></br>- The top plot shows the frequency distribution of the number of years of data the gages within the displayed area reported to the GRDC by 2016
+    </br></br>- The bottom plot shows the number of reporting stream gages over time within the displayed area')), 
+    placement="left", trigger="hover")
 }
 
 shinyApp(ui, server)
@@ -640,10 +737,18 @@ shinyApp(ui, server)
 # #Not useful - test
 # read.dbf("F:/Miscellaneous/Hydro_classes/Analysis/Fish/HUC6div_category.dbf")
 # 
+# Get HUC6 names
+# fgdb = "F:/Miscellaneous/Hydro_classes/Analysis/wbdhu6_a_us_march2017/wbdhu6_a_us_march2017.gdb"
+# HUC6_march0217 = readOGR(dsn=fgdb,layer="WBDHU6")
+# HUC6_name <- HUC6_march0217@data[,c('HUC6','NAME')]
+# rm(HUC6_march0217)
+
+
 # #Merge fishdiv, ndc, flood, quasi-ext with HUC6
 # data_merge <- merge(quasi_ext, fishdiv, by.x="HUC6", by.y="HUC6_id", all.x =T) %>%
 #   merge(., ndc, by="HUC6", all.x =T) %>%
-#   merge(., flood, by="HUC6", all.x =T)
+#   merge(., flood, by="HUC6", all.x =T) %>%
+#   merge(., HUC6_name, by="HUC6", all.x=T)
 # 
 # Take out a columns Tot.Area.x, etc.
 #
@@ -693,15 +798,15 @@ shinyApp(ui, server)
 # # Determine the FC extent, projection, and attribute information
 # class(fc)
 # summary(fc)
-# #Merge shapefile with attributes
-# fc_merge <- merge(fc, data_merge, by="HUC6",all.x=T)
 #
 # #Simplify polygons to reduce load time
-# summary(fc_merge)
-# object.size(fc_merge)
-# simplified <- rmapshaper::ms_simplify(fc_merge)
+# summary(fc)
+# object.size(fc_)
+# simplified <- rmapshaper::ms_simplify(fc)
 # object.size(simplified)
-# 
+# #Merge shapefile with attributes
+# simplified <- merge(simplified, data_merge, by="HUC6",all.x=T)
+
 # #Prepare hatched polygons to represent basins with high gaging density decline risk
 # #Twicked from https://statnmap.com/en/2017/05/how-to-fill-a-hatched-area-polygon-with-holes-in-leaflet-with-r/
 # #hatched.SpatialPolygons didn't work so had to troubleshoot the function to generate hatches + didn't need to have the 'holes' functionality
@@ -711,7 +816,7 @@ shinyApp(ui, server)
 # density = 5
 # angle = 45
 # fillOddEven = FALSE
-# #Make sure that input isspatialPolygons 
+# #Make sure that input isspatialPolygons
 # if (!is(extsimplified, "SpatialPolygons"))
 #   stop("Not a SpatialPolygons object")
 # 
@@ -775,11 +880,28 @@ shinyApp(ui, server)
 #   SpatialLines(all.Lines),
 #   data = data.frame(ID = all.Lines.ID),
 #   match.ID = FALSE)
+# #
+# 
+################################
+#Prepare formatted table
+################################
+# data_merge_format <- data_merge[,c(13,1,2,11,6,12,8,10,3,4,5,7,9)]
+# data_merge_format$totalpop <- round(as.numeric(data_merge_format$totalpop))
+# data_merge_format[data_merge_format$ndc_category == 'LowNDC' & !is.na(data_merge_format$ndc_category), "ndc_category"] <- "Low"
+# data_merge_format[data_merge_format$ndc_category == 'HighNDC' & !is.na(data_merge_format$ndc_category), "ndc_category"] <- "High"
+# data_merge_format[data_merge_format$flood_category == 'LowRisk' & !is.na(data_merge_format$flood_category), "flood_category"] <- "Low"
+# data_merge_format[data_merge_format$flood_category == 'HighRisk' & !is.na(data_merge_format$flood_category), "flood_category"] <- "High"
+# data_merge_format[data_merge_format$fish_category == 'LowEndemism' & !is.na(data_merge_format$fish_category), "fish_category"] <- "Low"
+# data_merge_format[data_merge_format$fish_category == 'HighEndemism' & !is.na(data_merge_format$fish_category), "fish_category"] <- "High"
 #
 # ################################
 # #Add metadata files to workspace
-# ################################
-# readme <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_6/www/README.txt')
-# metadata <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_6/www/metadata_columns.csv')
-
-# save.image()
+################################
+# readme <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_7/www/README.txt')
+# metadata <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_7/www/metadata_columns.csv')
+# 
+# readme_gages <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_7/www/README_gages.txt')
+# metadata_gages <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_7/www/metadata_columns_gages.csv')
+# 
+# 
+# save.image("F:/Miscellaneous/Hydro_classes/Map/Map_7/Map_6.RData")
