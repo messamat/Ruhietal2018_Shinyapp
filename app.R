@@ -23,7 +23,7 @@ library(HatchedPolygons)
 
 ################## SEE DATA PREP AT THE END OF THIS CODE ##########################
 
-load("Map_6.RData")
+load("Map_7.RData")
 
 #Set up palettes
 extpal <- colorBin(palette=c('#FFFFCC', "#FEB24C","#E31A1C", "#800026"), bins=c(0,0.20,0.40,0.60,0.80))
