@@ -1,0 +1,6 @@
+Variable name,Type,Label
+site_no,char,USGS gage station identification code
+HUC6,char,HUC6 identification code
+HUC4,num,HUC4 identification
+1861,num,"Gage activity in 1861: 0 means that the gage recorded data for less than 180 days in 1861, 1 means that the gage recorded data for more than 180 days"
+2016,num,"Gage activity in 2016: 0 means that the gage recorded data for less than 180 days in 2016, 1 means that the gage recorded data for more than 180 days"
