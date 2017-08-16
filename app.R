@@ -1,8 +1,3 @@
-#Source code for online app serving as supplemetary material to Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Consistent freshwater resource monitoring for a changing world"
-#App developer: Mathis Messager
-#Contact info: messamat@uw.edu
-#Last updated: 08/04/2017
-
 library(foreign)
 library(leaflet)
 library(leaflet.extras)
@@ -521,10 +516,9 @@ server <- function(input, output, session) {
   output$table <- DT::renderDataTable(
     DT::datatable({tabdat()},style='bootstrap', class='compact',selection = "multiple", rownames = F,
                   colnames = c('Name'=1, 'Decline risk %'=3, 'Water scarcity'=4, 'NDC'=5, 'Flood risk %' = 6, '% pop. in flood zone' = 7, 
-                               'Fish diversity' = 8, 'EWU TE sp.' = 10, 'Average # of TE sp.'=11, 
-                               'Total population'=12, '% pop. in area with flood study'=13),
+                               'Fish diversity' = 8, 'EWU' = 9, 'Total population'=10, '% pop. in area with flood study'=11),
                   extensions = 'FixedHeader', options=list(scrollY=TRUE, fixedHeader = TRUE)) %>% 
-      formatRound(c(3,5,7,9,10,11,13), digits=2)
+      formatRound(c(3,5,7,9,11), digits=2)
   )
 
   #Allow for user to zoom in to selected basin
@@ -710,19 +704,19 @@ shinyApp(ui, server)
 #Please contact Mathis Messager @ messamat@uw.edu for the raw data required to perform data prep. 
 #The working space should be sufficient to run the app locally provided one or two changes in the code
 
-# ###############################
-# # Prepare world gages network 
-# ###############################
-# #Import GRDC data
+###############################
+# Prepare world gages network
+###############################
+#Import GRDC data
 # GRDCdat <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/World_gages/20170124_GRDC_Stations 2_metadata.csv")
 # coordinates(GRDCdat) <- ~long+lat
 # class(GRDCdat)
-#
+# 
 # ###############################
 # # Prepare US basins attributes
 # ###############################
 # #Read in data on quasi-extinction probability (decline risk)
-# quasi_ext <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/Quasi-extinction/version_4/Quasiext.huc6_v4.csv")
+# quasi_ext <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/Quasi-extinction/version_5/Quasiext.huc6_v5.csv")
 # quasi_ext [quasi_ext $rownames_HUC6 < 100000,'HUC6'] <- paste('0',as.character(quasi_ext [quasi_ext $rownames_HUC6 < 100000,'rownames_HUC6']),sep="")
 # quasi_ext [quasi_ext $rownames_HUC6 >= 100000,'HUC6'] <- as.character(quasi_ext [quasi_ext $rownames_HUC6 >= 100000,'rownames_HUC6'])
 # quasi_ext <- quasi_ext[,-c(1,2)]
@@ -742,45 +736,42 @@ shinyApp(ui, server)
 # #Not useful - test
 # read.dbf("F:/Miscellaneous/Hydro_classes/Analysis/Fish/HUC6div_category.dbf")
 # 
-# Get HUC6 names
+# #Get HUC6 names
 # fgdb = "F:/Miscellaneous/Hydro_classes/Analysis/wbdhu6_a_us_march2017/wbdhu6_a_us_march2017.gdb"
 # HUC6_march0217 = readOGR(dsn=fgdb,layer="WBDHU6")
 # HUC6_name <- HUC6_march0217@data[,c('HUC6','NAME')]
 # rm(HUC6_march0217)
-
-
+# 
+# 
 # #Merge fishdiv, ndc, flood, quasi-ext with HUC6
 # data_merge <- merge(quasi_ext, fishdiv, by.x="HUC6", by.y="HUC6_id", all.x =T) %>%
 #   merge(., ndc, by="HUC6", all.x =T) %>%
 #   merge(., flood, by="HUC6", all.x =T) %>%
 #   merge(., HUC6_name, by="HUC6", all.x=T)
 # 
-# Take out a columns Tot.Area.x, etc.
-#
 # #Categorize basins in two levels for each characteristic: fish diversity, water scarcity, and flood rosk
 # #Fish div (categorize based on median fish EWU)
 # med_EWU = median(data_merge$EWU, na.rm=T)
 # data_merge[data_merge$EWU >= med_EWU & !is.na(data_merge$EWU),"fish_category"] <- "HighEndemism"
 # data_merge[data_merge$EWU < med_EWU & !is.na(data_merge$EWU),"fish_category"] <- "LowEndemism"
 # data_merge[is.na(data_merge$EWU),"fish_category"] <- "NoEWUdata"
-#
+# 
 # #NDC (categorize as high NDC when historical maximum cumulative deficit exceeds a full year of precipitation)
 # med_NDC_HUC = median(data_merge$NDC_HUC, na.rm=T)
 # data_merge[data_merge$NDC_HUC >= 1 & !is.na(data_merge$EWU),"ndc_category"] <- "HighNDC"
 # data_merge[data_merge$NDC_HUC < 1 & !is.na(data_merge$EWU),"ndc_category"] <- "LowNDC"
-#
+# 
 # #Flood (categorized as high flood risk when over 5% of the population inhabiting an area with a flood risk map lives wihtin a 100-yr flood zone)
 # med_floodpop = median(data_merge$flood_FEMA, na.rm=T)
 # data_merge[data_merge$flood_FEMA >= 0.05 & !is.na(data_merge$EWU),"flood_category"] <- "HighRisk"
 # data_merge[data_merge$flood_FEMA < 0.05 & !is.na(data_merge$EWU),"flood_category"] <- "LowRisk"
 # data_merge[data_merge$HUC6_pop_FEMAzone == 0 & !is.na(data_merge$EWU),"flood_category"] <- "NoFEMAdata"
-# data_merge[data_merge$TotArea_x == 0] <- "NA"
-#
+# 
 # data_merge$fishndc_category <- paste(data_merge$fish_category,data_merge$ndc_category,sep="_")
 # data_merge$fishflood_category <- paste(data_merge$fish_category,data_merge$flood_category,sep="_")
 # data_merge$ndcflood_category <- paste(data_merge$ndc_category,data_merge$flood_category,sep="_")
 # data_merge$all_category <- paste(data_merge$ndc_category,data_merge$flood_category, data_merge$fish_category, sep="_")
-#
+# 
 # ###################################
 # # Prepare US gages geospatial data
 # ###################################
@@ -792,26 +783,26 @@ shinyApp(ui, server)
 # colnames(gagefc@data)[9:164] <- colnames(dischargecast[,4:159])
 # #Remove gages with NA values (46 gages/23k)
 # gagefc <- gagefc[!is.na(gagefc@data$X1861),]
-#
+# 
 # ###################################
 # # Prepare US basins geospatial data
 # ###################################
-#
+# 
 # # Import basins shapefile
-# folder = "F:/Miscellaneous/Hydro_classes/Figures/Figure_3"
+# folder = "F:/Miscellaneous/Hydro_classes/Figures/Figure_3/FloodNDC_Map"
 # fc = readOGR(dsn=folder,layer="HUC6")
 # # Determine the FC extent, projection, and attribute information
 # class(fc)
 # summary(fc)
-#
+# 
 # #Simplify polygons to reduce load time
 # summary(fc)
-# object.size(fc_)
+# object.size(fc)
 # simplified <- rmapshaper::ms_simplify(fc)
 # object.size(simplified)
 # #Merge shapefile with attributes
 # simplified <- merge(simplified, data_merge, by="HUC6",all.x=T)
-
+# 
 # #Prepare hatched polygons to represent basins with high gaging density decline risk
 # #Twicked from https://statnmap.com/en/2017/05/how-to-fill-a-hatched-area-polygon-with-holes-in-leaflet-with-r/
 # #hatched.SpatialPolygons didn't work so had to troubleshoot the function to generate hatches + didn't need to have the 'holes' functionality
@@ -887,10 +878,10 @@ shinyApp(ui, server)
 #   match.ID = FALSE)
 # #
 # 
-################################
-#Prepare formatted table
-################################
-# data_merge_format <- data_merge[,c(13,1,2,11,6,12,8,10,3,4,5,7,9)]
+# ###############################
+# #Prepare formatted table
+# ###############################
+# data_merge_format <- data_merge[,c(13,1,2,15,7,16,11,14,4,8,12)]
 # data_merge_format$totalpop <- round(as.numeric(data_merge_format$totalpop))
 # data_merge_format[data_merge_format$ndc_category == 'LowNDC' & !is.na(data_merge_format$ndc_category), "ndc_category"] <- "Low"
 # data_merge_format[data_merge_format$ndc_category == 'HighNDC' & !is.na(data_merge_format$ndc_category), "ndc_category"] <- "High"
@@ -898,15 +889,17 @@ shinyApp(ui, server)
 # data_merge_format[data_merge_format$flood_category == 'HighRisk' & !is.na(data_merge_format$flood_category), "flood_category"] <- "High"
 # data_merge_format[data_merge_format$fish_category == 'LowEndemism' & !is.na(data_merge_format$fish_category), "fish_category"] <- "Low"
 # data_merge_format[data_merge_format$fish_category == 'HighEndemism' & !is.na(data_merge_format$fish_category), "fish_category"] <- "High"
-#
+# 
 # ################################
 # #Add metadata files to workspace
-################################
+# ###############################
 # readme <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_7/www/README.txt')
 # metadata <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_7/www/metadata_columns.csv')
 # 
 # readme_gages <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_7/www/README_gages.txt')
 # metadata_gages <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_7/www/metadata_columns_gages.csv')
 # 
-# 
-# save.image("F:/Miscellaneous/Hydro_classes/Map/Map_7/Map_6.RData")
+# rm(fc) 
+# rm(all.Lines)
+# rm(polys)
+# save.image("F:/Miscellaneous/Hydro_classes/Map/Map_7/Map_7.RData")
