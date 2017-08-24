@@ -1,8 +1,8 @@
-Metadata for data download from the online app accompanying Ruhi et al.(2017) 'Consistent freshwater resource monitoring for a changing world'
+Metadata for data download from the online app accompanying Ruhi et al.(2017) 'Losing the pulse of the Earth's fresh waters'
 Author: Mathis Messager
-Date: 08/02/2017
+Date: 08/24/2017
 Contact information: messamat@uw.edu
-Refer to https://messamat.shinyapps.io/Map_5/ for complete methodology
+Refer to https://shiny.sesync.org/apps/gages/ for complete methodology
 
 Ruhi et al. 2017: URL
 
