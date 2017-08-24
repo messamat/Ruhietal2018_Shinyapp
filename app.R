@@ -24,7 +24,7 @@ source('dependencies.R')
 
 ################## SEE DATA PREP AT THE END OF THIS CODE ##########################
 
-load("Map_7.RData")
+load("Map_8.RData")
 
 #Set up palettes
 extpal <- colorBin(palette=c('#FFFFCC', "#FEB24C","#E31A1C", "#800026"), bins=c(0,0.20,0.40,0.60,0.80))
@@ -91,10 +91,10 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                  #shinytheme() from shinythemes package must be avoided because it conflicts with bsModal in shinyBS.
                  id="nav",
                  
-                 tabPanel(title="United States",value="US",
+                   tabPanel(title="United States",value="US",
                           div(class="outer",
                               leafletOutput("USmap", width = "100%", height = "100%"),
-                              absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
+                              absolutePanel(id = "controls", class = "panel panel-default", fixed = F,
                                             draggable = FALSE, top = 60, left = "auto", right = 20, bottom = "auto",
                                             width = 330, height = "auto",
                                             wellPanel(
@@ -104,15 +104,18 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                                               checkboxInput("gagechkdeact", label="Deactivated streamgages", value=F),
                                               sliderInput("gageyear", strong("Year of stream age activity"), min=1870, max=2016, value=2016,
                                                           step = 1, round=T, sep=""),
-                                              bsTooltip(id="gageyear", title=paste0("Change the year to see how the US stream gage network changed over time.",
-                                                                                    " The size of the points changes among gages and over time based on the number of years of data recorded until that year"),
+                                              bsTooltip(id="gageyear", title=paste0("Slide the knob to see how the U.S. stream gage network changed over time.",
+                                                                                    "Point size reflects the length of the time series until that year"),
                                                         "left",options = list(container = "body"))
                                             )
+                              ),
+                              tags$div(id="cite2",
+                                       HTML('<a href="http://www.sciencemag.org/journal-department/policy-forum" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Losing the pulse of the Earth&#39s fresh waters"</a>')
                               )
                           )
                  ),
                  
-                 tabPanel("Explore US data",
+                 tabPanel("Explore U.S. data",
                           div(class="outer",
                               tags$head(tags$script(src = "message-handler.js")), #Allow for pop-up message when user does not select any basin, see https://shiny.rstudio.com/articles/action-buttons.html
                               fluidRow(
@@ -128,16 +131,22 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                                 DT::dataTableOutput("table")
                               ),
                               fluidRow(column(2,
-                                              downloadButton('save', 'Save basin data for selected threats')
+                                              downloadButton('save', 'Save basin data'),
+                                              bsTooltip(id="save", 
+                                                        title="Download data table for basins in the selected high threat categories", 
+                                                        placement="top", trigger="hover")
                                               ),
                                        column(2,
-                                              downloadButton('saveselected', 'Save gage data for selected basins')
+                                              downloadButton('saveselected', 'Save gage data'),
+                                              bsTooltip(id="saveselected", 
+                                                        title="Download information for gages located within selected basins (click rows to select basins)", 
+                                                        placement="top", trigger="hover")
                                               ),
                                        column(2,
                                               actionButton("zoom", label = "Zoom to selected basin"),
                                               bsTooltip(id="zoom", 
-                                               title="Select a row in the table and click here to zoom to the selected basin", 
-                                               placement="bottom", trigger="hover")
+                                               title="Click rows in the table to select basins and click here to zoom to the selected basins. To deselect a single basin, click again.", 
+                                               placement="top", trigger="hover")
                                               ),
                                        column(1,offset=-1,
                                               actionButton("clear", label= "Clear selection"))
@@ -157,26 +166,32 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                                             draggable = FALSE, top = 60, left = "auto", right = 20, bottom = "auto",
                                             width = 350, height = "auto",
                                             wellPanel(
-                                              h4("GRDC hydrometric network explorer"),
+                                              h4("GRDC hydrometric network explorer",  tipify(icon("info-circle"), 
+                                                                                              title = HTML(paste0(
+                                                                                                "For more information about the Global Runoff Data Center (GRDC), refer to Methodology in the <i>About</i> tab")),
+                                                                                              trigger="hover")),
                                               p("Gages within map bounds"),
                                               
                                               plotOutput("BoundYears", height = 350),
                                               br(),
                                               sliderInput(inputId="gageyearworld", label="Year of streamgage reporting:", min=1806, max=2015, value=2010,
                                                             step = 1, round=T, sep=""),
-                                              bsTooltip(id="gageyearworld", title=paste0("Change the year to see how the GRDC stream gage network changed over time.",
-                                                                                         " The size of the points changes among gages and over time based on the number of years of data recorded until that year"),
+                                              bsTooltip(id="gageyearworld", title=paste0("Slide the knob to see how the GRDC stream gage network changed over time.", 
+                                                                                         "Point size reflects the length of the time series until that year."),
                                                         "left",options = list(container = "body")),
                                               tipify(icon("info-circle"), 
                                                      title = HTML(paste0(
                                                        "Note that a gage could be inactive for two reasons:",
                                                        "<br>- the actual discontinuation of data recording",
                                                        "<br>- the discontinuation of reporting by the entity collecting the data")),
-                                                     trigger="click")
+                                                     trigger="hover")
                                             ),
                                             style = "opacity: 0.90"
-                              )
+                              ),
                               
+                              tags$div(id="cite2",
+                                       HTML('<a href="http://www.sciencemag.org/journal-department/policy-forum" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Losing the pulse of the Earth&#39s fresh waters"</a>')
+                              )
                           )
                  ),
                 
@@ -184,25 +199,24 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                          h2("About this application"),
                          HTML('
                               <p>This application provides supplementary material to the Policy Forum article 
-                              <a href="http://www.sciencemag.org/journal-department/policy-forum" target="_blank">Consistent freshwater resource monitoring for a changing world</a> 
+                              <a href="http://www.sciencemag.org/journal-department/policy-forum" target="_blank">Losing the pulse of the Earth&#39s fresh waters</a> 
                               published in December 2017. <br/>
-                              Abstract: The deterioration of water information systems threatens our ability to track the pulse of fresh waters under a non-stationary climate.
-                              <br/>
-                              <br/>
-                              The <b>World</b> tab shows the history of stream gages data reporting to the
-                              <a href="http://www.bafg.de/GRDC/EN/Home/homepage_node.html">Global Runoff Data Center (GRDC)</a>. A gage is considered active if its records were reported to the GRDC that year. </br>
-                              Therefore, an inactive gage could either be due to the discontinuation of data recording or the lack of reporting of recorded data by the entity managing the gage
                               <br/>
                               The <b>United States</b> tab shows the history of water information in the US. In addition, it shows flood risk, water scarcity, fish diversity, and the risk of gaging density decline at the river basin level.
                               </br>
-                              The <b>Explore data</b> tab allows users to download data on US river basins shown in the "United States" tab'),
+                              The <b>Explore data</b> tab allows users to download data on US river basins shown in the "United States" tab
+                              </br>
+                              The <b>World</b> tab shows the history of stream gages data reporting to the
+                              <a href="http://www.bafg.de/GRDC/EN/Home/homepage_node.html">Global Runoff Data Center (GRDC)</a>. A gage is considered active if its records were reported to the GRDC that year. </br>
+                              Therefore, an inactive gage could either be due to the discontinuation of data recording or the lack of reporting of recorded data by the entity managing the gage
+                              <br/>'),
                          br(),
                          h2("Methodology"),
                          tags$iframe(style="height:400px; width:50%; scrolling=yes",  #PDF inset
-                                     src="GagesAnalysis_Methods_4.pdf"),
+                                     src="Ruhi_et_al_streamgaging_SM_def.pdf"),
                          h2("Contact information and source code"),
                          HTML('
-                              <p>Original publication: Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Consistent freshwater resource monitoring for a changing world" Science XXXXXXXXXXXX</br>
+                              <p>Original publication: Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Losing the pulse of the Earth&#39s fresh waters" Science XXXXXXXXXXXX</br>
                               App developer: Mathis Messager (email: messamat@uw.edu) </br>
                               Study source code: github link </br>
                               <a href="https://github.com/messamat/Ruhietal2017_Shinyapp" target="_blank">Map source code</a></br>')
@@ -299,7 +313,7 @@ server <- function(input, output, session) {
                                         "Fish diversity" = "fish"),
                          selected = NULL),
       makeCheckboxTooltip(checkboxValue = "dec", 
-                          Tooltip = "<strong>Basins with >50% risk of having their gage network density halved by 2023</strong>"),
+                          Tooltip = "<strong>Basins with >50% risk of having their gage network density halved by 2022</strong>"),
       makeCheckboxTooltip(checkboxValue = "scar", 
                           Tooltip = HTML(paste0(
         "<strong>High water scarcity: basins with Normalized Deficit Cumulated (NDC) > 1</strong>",
@@ -310,8 +324,8 @@ server <- function(input, output, session) {
                           Tooltip = "<strong>High flood risk: basins with >5% of the population living within a 100-year flood zone</strong>"),
       makeCheckboxTooltip(checkboxValue = "fish", 
                           Tooltip = HTML(paste0(
-        "<strong>High fish diversity: basins with endemism weighted richness/units (EWU) > 0.28 (median value)</strong>",
-        "<br>EWU is the sum of the portion of each species' range contained within the basin. It expresses both the richness and degree of endemism of species.")))
+        "<strong>High fish diversity: basins with endemism weighted richness/units (EWU) > 0.28 (U.S.-wide median value)</strong>",
+        "<br>EWU is the sum of the portion of each species range contained within the basin. It expresses both the richness and degree of endemism of species.")))
     )
   })
   
@@ -363,7 +377,7 @@ server <- function(input, output, session) {
           addPolygons(data=simplified,weight = 1, smoothFactor = 0.5, fillColor = ~fishpal(fish_category), color = ~fishpal(fish_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
-          addLegend(position="bottomleft", colors=c('#006d2c', "#E8E8E8","#ffffff"), labels=c('High (> median EWU)', 'Low (< median EWU)', 'Insufficient gage data'),
+          addLegend(position="bottomleft", colors=c('#006d2c', "#E8E8E8","#ffffff"), labels=c('High (> U.S.-wide median EWU)', 'Low (< U.S.-wide median EWU)', 'Insufficient gage data'),
                     title="Fish diversity", opacity=1,layerId="basins")
       }
       
@@ -519,7 +533,7 @@ server <- function(input, output, session) {
     DT::datatable({tabdat()},style='bootstrap', class='compact',selection = "multiple", rownames = F,
                   colnames = c('Name'=1, 'Decline risk %'=3, 'Water scarcity'=4, 'NDC'=5, 'Flood risk %' = 6, '% pop. in flood zone' = 7, 
                                'Fish diversity' = 8, 'EWU' = 9, 'Total population'=10, '% pop. in area with flood study'=11),
-                  extensions = 'FixedHeader', options=list(scrollY=TRUE, fixedHeader = TRUE)) %>% 
+                  extensions = 'FixedHeader', options=list(scrollY=TRUE, fixedHeader = TRUE, columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% 
       formatRound(c(3,5,7,9,11), digits=2)
   )
 
@@ -895,13 +909,13 @@ shinyApp(ui, server)
 # ################################
 # #Add metadata files to workspace
 # ###############################
-# readme <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_7/www/README.txt')
-# metadata <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_7/www/metadata_columns.csv')
+# readme <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_8/www/README.txt')
+# metadata <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_8/www/metadata_columns.csv')
 # 
-# readme_gages <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_7/www/README_gages.txt')
-# metadata_gages <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_7/www/metadata_columns_gages.csv')
+# readme_gages <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_8/www/README_gages.txt')
+# metadata_gages <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_8/www/metadata_columns_gages.csv')
 # 
 # rm(fc) 
 # rm(all.Lines)
 # rm(polys)
-# save.image("F:/Miscellaneous/Hydro_classes/Map/Map_7/Map_7.RData")
+# save.image("F:/Miscellaneous/Hydro_classes/Map/Map_8/Map_8.RData")
