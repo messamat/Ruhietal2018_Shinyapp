@@ -84,7 +84,8 @@ polypopup <- paste0("<strong>HUC6 name: </strong>", simplified$NAME,
 
 
 ###########################################################################################################################################################
-ui <- navbarPage(title=HTML('<div><a href="https://www.nature.com/natsustain/" target="_blank">Losing the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
+ui <- navbarPage(windowTitle = 'Interactive Gages',
+                 title=HTML('<div><a href="https://www.nature.com/natsustain/" target="_blank">Losing the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
                  theme="simplex.css", # for shinyapps.io
                  #theme="http://bootswatch.com/simplex/bootstrap.css", #for local/RStudio and shiny-server
                  #shinytheme() from shinythemes package must be avoided because it conflicts with bsModal in shinyBS.
