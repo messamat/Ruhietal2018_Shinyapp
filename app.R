@@ -85,13 +85,13 @@ polypopup <- paste0("<strong>HUC6 name: </strong>", simplified$NAME,
 
 ###########################################################################################################################################################
 ui <- navbarPage(windowTitle = 'Interactive Gages',
-                 title=HTML('<div><a href="http://www.sciencemag.org/journal-department/policy-forum" target="_blank">Losing the pulse of the Earth’s fresh waters</a></div>'), #Link to online article
+                 title=HTML('<div><a href="https://www.nature.com/natsustain/" target="_blank">Losing the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
                  theme="simplex.css", # for shinyapps.io
                  #theme="http://bootswatch.com/simplex/bootstrap.css", #for local/RStudio and shiny-server
                  #shinytheme() from shinythemes package must be avoided because it conflicts with bsModal in shinyBS.
                  id="nav",
                  
-                   tabPanel(title="United States",value="US",
+                 tabPanel(title="United States",value="US",
                           div(class="outer",
                               leafletOutput("USmap", width = "100%", height = "100%"),
                               absolutePanel(id = "controls", class = "panel panel-default", fixed = F,
@@ -110,7 +110,7 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                                             )
                               ),
                               tags$div(id="cite2",
-                                       HTML('<a href="http://www.sciencemag.org/journal-department/policy-forum" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Losing the pulse of the Earth&#39s fresh waters"</a>')
+                                       HTML('<a href="https://www.nature.com/natsustain/" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Losing the pulse of the Earth&#39s fresh waters"</a>')
                               )
                           )
                  ),
@@ -190,7 +190,7 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                               ),
                               
                               tags$div(id="cite2",
-                                       HTML('<a href="http://www.sciencemag.org/journal-department/policy-forum" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Losing the pulse of the Earth&#39s fresh waters"</a>')
+                                       HTML('<a href="https://www.nature.com/natsustain/" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Losing the pulse of the Earth&#39s fresh waters"</a>')
                               )
                           )
                  ),
@@ -199,7 +199,7 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                          h2("About this application"),
                          HTML('
                               <p>This application provides supplementary material to the Policy Forum article 
-                              <a href="http://www.sciencemag.org/journal-department/policy-forum" target="_blank">Losing the pulse of the Earths fresh waters</a> 
+                              <a href="https://www.nature.com/natsustain/" target="_blank">Losing the pulse of the Earth&#39s fresh waters</a> 
                               published in December 2017. <br/>
                               <br/>
                               The <b>United States</b> tab shows the history of water information in the US. In addition, it shows flood risk, water scarcity, fish diversity, and the risk of gaging density decline at the river basin level.
@@ -216,7 +216,7 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                                      src="Ruhi_et_al_streamgaging_SM_def.pdf"),
                          h2("Contact information and source code"),
                          HTML('
-                              <p>Original publication: Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Losing the pulse of the Earths fresh waters" Under review.</br>
+                              <p>Original publication: Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Losing the pulse of the Earth&#39s fresh waters"</br>
                               App developer: Mathis Messager (email: messamat@uw.edu) </br>
                               Study source code: github link </br>
                               <a href="https://github.com/messamat/Ruhietal2017_Shinyapp" target="_blank">Map source code</a></br>')
