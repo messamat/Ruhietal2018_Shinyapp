@@ -1,30 +1,29 @@
-source('dependencies.R')
-# library(foreign)
-# library(leaflet)
-# library(leaflet.extras)
-# library(tidyverse)
-# library(sp)
-# library(rgeos)
-# library(maps)
-# library(rgdal)
-# library(dplyr)
-#library(rmapshaper)
-#library(shiny)
-#library(shinyBS)
-#library(ggplot2)
-#library(DT)
-#library(rsconnect)
-#library(grid)
-#library(gridExtra)
+library(foreign)
+library(leaflet)
+library(leaflet.extras)
+library(tidyverse)
+library(sp)
+library(rgeos)
+library(maps)
+library(rgdal)
+library(dplyr)
+library(rmapshaper)
+library(shiny)
+library(shinyBS)
+library(ggplot2)
+library(DT)
+library(rsconnect)
+library(grid)
+library(gridExtra)
+#library(geojsonio) for topojson conversion - if needed
 #library(hddtools) to access GRDC data
 #For hatched polygons
 #devtools::install_github("statnmap/HatchedPolygons", build_vignettes = TRUE)
-#library(HatchedPolygons)
+#library(HatchedPolygons) 
 #vignette("leaflet_shading_polygon", package = "HatchedPolygons")
 
 ################## SEE DATA PREP AT THE END OF THIS CODE ##########################
-
-load("Map_8.RData")
+load("Map_9.RData")
 
 #Set up palettes
 extpal <- colorBin(palette=c('#FFFFCC', "#FEB24C","#E31A1C", "#800026"), bins=c(0,0.20,0.40,0.60,0.80))
@@ -83,9 +82,8 @@ polypopup <- paste0("<strong>HUC6 name: </strong>", simplified$NAME,
                     "<br><strong>EWU: </strong>", round(as.numeric(simplified$EWU),2))
 
 
-###########################################################################################################################################################
-ui <- navbarPage(windowTitle = 'Interactive Gages',
-                 title=HTML('<div><a href="https://www.nature.com/natsustain/" target="_blank">Losing the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
+####################################################### UI ########################################################################################
+ui <- navbarPage(title=HTML('<div><a href="https://www.nature.com/natsustain/" target="_blank">Losing the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
                  theme="simplex.css", # for shinyapps.io
                  #theme="http://bootswatch.com/simplex/bootstrap.css", #for local/RStudio and shiny-server
                  #shinytheme() from shinythemes package must be avoided because it conflicts with bsModal in shinyBS.
@@ -223,7 +221,7 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                          )
 )
 
-
+####################################################### SERVER ########################################################################################
 server <- function(input, output, session) {
   ######################################################CUSTOM FUNCTIONS ####################################################################
   #Custom function to make circle legends from https://stackoverflow.com/questions/37446283/creating-legend-with-circles-leaflet-r
@@ -352,7 +350,7 @@ server <- function(input, output, session) {
         leafletProxy("USmap") %>%
           removeControl("basins") %>%
           clearGroup("basins") %>%
-          addPolygons(data=simplified, weight = 1, smoothFactor = 0.5, fillColor = ~ndcpal(ndc_category), color = ~ndcpal(ndc_category),fillOpacity = 0.8, opacity = 0.5,
+          addPolygons(data=simplified, weight = 1, smoothFactor = 1.5, fillColor = ~ndcpal(ndc_category), color = ~ndcpal(ndc_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft", colors=c('#D66460', "#E8E8E8", "#ffffff"), labels=c("High (NDC > 1)", "Low (NDC < 1)","Insufficient gage data"),
@@ -363,7 +361,7 @@ server <- function(input, output, session) {
         leafletProxy("USmap") %>%
           removeControl("basins") %>%
           clearGroup("basins") %>%
-          addPolygons(data=simplified,weight = 1, smoothFactor = 0.5, fillColor = ~floodpal(flood_category), color = ~floodpal(flood_category),fillOpacity = 0.8, opacity =0.5,
+          addPolygons(data=simplified,weight = 1, smoothFactor = 1.5, fillColor = ~floodpal(flood_category), color = ~floodpal(flood_category),fillOpacity = 0.8, opacity =0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft", colors=c('#69ABC0', "#E8E8E8","#ffffff"), labels=c('High (> 5% population)','Low (< 5% population)','Insufficient gage data'), 
@@ -374,7 +372,7 @@ server <- function(input, output, session) {
         leafletProxy("USmap") %>%
           removeControl("basins") %>%
           clearGroup("basins") %>%
-          addPolygons(data=simplified,weight = 1, smoothFactor = 0.5, fillColor = ~fishpal(fish_category), color = ~fishpal(fish_category),fillOpacity = 0.8, opacity = 0.5,
+          addPolygons(data=simplified,weight = 1, smoothFactor = 1.5, fillColor = ~fishpal(fish_category), color = ~fishpal(fish_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft", colors=c('#006d2c', "#E8E8E8","#ffffff"), labels=c('High (> U.S.-wide median EWU)', 'Low (< U.S.-wide median EWU)', 'Insufficient gage data'),
@@ -389,7 +387,7 @@ server <- function(input, output, session) {
         leafletProxy("USmap") %>%
           removeControl("basins") %>%
           clearGroup("basins") %>%
-          addPolygons(data=simplified, weight = 1, smoothFactor = 0.5, fillColor = ~fishndcpal(fishndc_category), color = ~fishndcpal(fishndc_category),fillOpacity = 0.8, opacity = 0.5,
+          addPolygons(data=simplified, weight = 1, smoothFactor = 1.5, fillColor = ~fishndcpal(fishndc_category), color = ~fishndcpal(fishndc_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft",
@@ -402,7 +400,7 @@ server <- function(input, output, session) {
         leafletProxy("USmap") %>%
           removeControl("basins") %>%
           clearGroup("basins") %>%
-          addPolygons(data=simplified, weight = 1, smoothFactor = 0.5, fillColor = ~fishfloodpal(fishflood_category), color = ~fishfloodpal(fishflood_category),fillOpacity = 0.8, opacity = 0.5,
+          addPolygons(data=simplified, weight = 1, smoothFactor = 1.5, fillColor = ~fishfloodpal(fishflood_category), color = ~fishfloodpal(fishflood_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft",
@@ -415,7 +413,7 @@ server <- function(input, output, session) {
         leafletProxy("USmap") %>%
           removeControl("basins") %>%
           clearGroup("basins") %>%
-          addPolygons(data=simplified, weight = 1, smoothFactor = 0.5, fillColor = ~ndcfloodpal(ndcflood_category), color = ~ndcfloodpal(ndcflood_category),fillOpacity = 0.8, opacity = 0.5,
+          addPolygons(data=simplified, weight = 1, smoothFactor = 1.5, fillColor = ~ndcfloodpal(ndcflood_category), color = ~ndcfloodpal(ndcflood_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft",
@@ -431,7 +429,7 @@ server <- function(input, output, session) {
       leafletProxy("USmap") %>%
         removeControl("basins") %>%
         clearGroup("basins") %>%
-        addPolygons(data=simplified, weight = 1, smoothFactor = 0.5, fillColor = ~allpal(all_category), color = ~allpal(all_category),fillOpacity = 0.8, opacity = 0.5,
+        addPolygons(data=simplified, weight = 1, smoothFactor = 1.5, fillColor = ~allpal(all_category), color = ~allpal(all_category),fillOpacity = 0.8, opacity = 0.5,
                     group = "basins",popup=polypopup,
                     highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
         addLegend(position="bottomleft",
@@ -557,7 +555,7 @@ server <- function(input, output, session) {
       #Add selected basins to US map as red polygon boundaries
       leafletProxy("USmap") %>%
         clearGroup("selectedHUC") %>% #Clear previous selection
-        addPolygons(data=selectedHUCs, weight = 2, smoothFactor = 0.5, fillColor = 'red', color = 'red',fillOpacity = 0, opacity = 0.8,
+        addPolygons(data=selectedHUCs, weight = 2, smoothFactor = 1.5, fillColor = 'red', color = 'red',fillOpacity = 0, opacity = 0.8,
                     group = "selectedHUC", 
                     highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1),
                     popup = polypopup[which(simplified$HUC6 %in% selectedHUCs$HUC6)]) %>%
@@ -799,14 +797,15 @@ shinyApp(ui, server)
 # colnames(gagefc@data)[9:164] <- colnames(dischargecast[,4:159])
 # #Remove gages with NA values (46 gages/23k)
 # gagefc <- gagefc[!is.na(gagefc@data$X1861),]
-# 
+# object.size(gagefc)
+
 # ###################################
 # # Prepare US basins geospatial data
 # ###################################
 # 
 # # Import basins shapefile
-# folder = "F:/Miscellaneous/Hydro_classes/Figures/Figure_3/FloodNDC_Map"
-# fc = readOGR(dsn=folder,layer="HUC6")
+#folder = "F:/Miscellaneous/Hydro_classes/Figures/Figure_3/FloodNDC_Map"
+# fc = readOGR(dsn=folder,layer="HUC6_conterm")
 # # Determine the FC extent, projection, and attribute information
 # class(fc)
 # summary(fc)
@@ -816,9 +815,17 @@ shinyApp(ui, server)
 # object.size(fc)
 # simplified <- rmapshaper::ms_simplify(fc)
 # object.size(simplified)
+#writeOGR(obj=simplified, dsn=folder,layer="HUC6_Rsimplified", driver="ESRI Shapefile")
+# Insufficient simplification: simplify in ArcGIS using the 'Simplify polygon' function with 'remove points' and 1 km max.deviation option.
+#simplified_max  = readOGR(dsn=folder,layer="HUC6_Arcsimplified")
 # #Merge shapefile with attributes
-# simplified <- merge(simplified, data_merge, by="HUC6",all.x=T)
-# 
+#simplified <- merge(simplified_max, data_merge, by="HUC6",all.x=T)
+
+# #Try to write out as topojson... but does not decrease size/does not use
+# #topojson_write(input=simplified_max, file='F:/Miscellaneous/Hydro_classes/Map/Map_9/www/data/simplified_max.topojson', precision=1)
+# #simplified_maxjson <- topojson_read('F:/Miscellaneous/Hydro_classes/Map/Map_9/www/data/simplified_max.topojson')
+# #object.size(simplified_maxjson)
+
 # #Prepare hatched polygons to represent basins with high gaging density decline risk
 # #Twicked from https://statnmap.com/en/2017/05/how-to-fill-a-hatched-area-polygon-with-holes-in-leaflet-with-r/
 # #hatched.SpatialPolygons didn't work so had to troubleshoot the function to generate hatches + didn't need to have the 'holes' functionality
