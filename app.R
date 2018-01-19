@@ -1,13 +1,13 @@
 source('dependencies.R')
-# library(foreign)
-# library(leaflet)
-# library(leaflet.extras)
-# library(tidyverse)
-# library(sp)
-# library(rgeos)
-# library(maps)
-# library(rgdal)
-# library(dplyr)
+#library(foreign)
+#library(leaflet)
+#library(leaflet.extras)
+#library(tidyverse)
+#library(sp)
+#library(rgeos)
+#library(maps)
+#library(rgdal)
+#library(dplyr)
 #library(rmapshaper)
 #library(shiny)
 #library(shinyBS)
@@ -16,15 +16,16 @@ source('dependencies.R')
 #library(rsconnect)
 #library(grid)
 #library(gridExtra)
+#library(readtext)
+#library(geojsonio) for topojson conversion - if needed
 #library(hddtools) to access GRDC data
 #For hatched polygons
 #devtools::install_github("statnmap/HatchedPolygons", build_vignettes = TRUE)
-#library(HatchedPolygons)
+#library(HatchedPolygons) 
 #vignette("leaflet_shading_polygon", package = "HatchedPolygons")
 
 ################## SEE DATA PREP AT THE END OF THIS CODE ##########################
-
-load("Map_8.RData")
+load("Map_10.RData")
 
 #Set up palettes
 extpal <- colorBin(palette=c('#FFFFCC', "#FEB24C","#E31A1C", "#800026"), bins=c(0,0.20,0.40,0.60,0.80))
@@ -82,12 +83,11 @@ polypopup <- paste0("<strong>HUC6 name: </strong>", simplified$NAME,
                     "<br><strong>Flood risk: </strong>", round(100*as.numeric(simplified$flood_FEMA),2),"%",
                     "<br><strong>EWU: </strong>", round(as.numeric(simplified$EWU),2))
 
-
-###########################################################################################################################################################
-ui <- navbarPage(windowTitle = 'Interactive Gages',
-                 title=HTML('<div><a href="https://www.nature.com/natsustain/" target="_blank">Losing the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
+####################################################### UI ########################################################################################
+ui <- navbarPage(title=HTML('<div><a href="https://www.nature.com/natsustain/" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
                  #theme="simplex.css", # for shinyapps.io
                  theme="http://bootswatch.com/simplex/bootstrap.css", #for local/RStudio and shiny-server
+
                  #shinytheme() from shinythemes package must be avoided because it conflicts with bsModal in shinyBS.
                  id="nav",
                  
@@ -110,7 +110,7 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                                             )
                               ),
                               tags$div(id="cite2",
-                                       HTML('<a href="https://www.nature.com/natsustain/" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Losing the pulse of the Earth&#39s fresh waters"</a>')
+                                       HTML('<a href="https://www.nature.com/natsustain/" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Tracking the pulse of the Earth&#39s fresh waters"</a>')
                               )
                           )
                  ),
@@ -190,7 +190,7 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                               ),
                               
                               tags$div(id="cite2",
-                                       HTML('<a href="https://www.nature.com/natsustain/" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Losing the pulse of the Earth&#39s fresh waters"</a>')
+                                       HTML('<a href="https://www.nature.com/natsustain/" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Tracking the pulse of the Earth&#39s fresh waters"</a>')
                               )
                           )
                  ),
@@ -198,13 +198,13 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                 tabPanel("About",
                          h2("About this application"),
                          HTML('
-                              <p>This application provides supplementary material to the Policy Forum article 
-                              <a href="https://www.nature.com/natsustain/" target="_blank">Losing the pulse of the Earth&#39s fresh waters</a> 
-                              published in December 2017. <br/>
+                              <p>This application provides supplementary material to the Nature Sustainability article 
+                              <a href="https://www.nature.com/natsustain/" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a> 
+                              published in XXXX 2018. <br/>
                               <br/>
                               The <b>United States</b> tab shows the history of water information in the US. In addition, it shows flood risk, water scarcity, fish diversity, and the risk of gaging density decline at the river basin level.
                               </br>
-                              The <b>Explore data</b> tab allows users to download data on US river basins shown in the "United States" tab
+                              The <b>Explore U.S. data</b> tab allows users to download data on US river basins shown in the "United States" tab
                               </br>
                               The <b>World</b> tab shows the history of stream gages data reporting to the
                               <a href="http://www.bafg.de/GRDC/EN/Home/homepage_node.html">Global Runoff Data Center (GRDC)</a>. A gage is considered active if its records were reported to the GRDC that year. </br>
@@ -216,14 +216,14 @@ ui <- navbarPage(windowTitle = 'Interactive Gages',
                                      src="Ruhi_et_al_streamgaging_SM_def.pdf"),
                          h2("Contact information and source code"),
                          HTML('
-                              <p>Original publication: Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Losing the pulse of the Earth&#39s fresh waters"</br>
+                              <p>Original publication: Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Tracking the pulse of the Earth&#39s fresh waters"</br>
                               App developer: Mathis Messager (email: messamat@uw.edu) </br>
                               Study source code: github link </br>
                               <a href="https://github.com/messamat/Ruhietal2017_Shinyapp" target="_blank">Map source code</a></br>')
                          )
 )
 
-
+####################################################### SERVER ########################################################################################
 server <- function(input, output, session) {
   ######################################################CUSTOM FUNCTIONS ####################################################################
   #Custom function to make circle legends from https://stackoverflow.com/questions/37446283/creating-legend-with-circles-leaflet-r
@@ -316,7 +316,7 @@ server <- function(input, output, session) {
                           Tooltip = "<strong>Basins with >50% risk of having their gage network density halved by 2022</strong>"),
       makeCheckboxTooltip(checkboxValue = "scar", 
                           Tooltip = HTML(paste0(
-        "<strong>High water scarcity: basins with Normalized Deficit Cumulated (NDC) > 1</strong>",
+        "<strong>High water scarcity: basins with Normalized Deficit Cumulated (NDC) > 2</strong>",
         "<br>The NDC is equal to the maximum cumulative deficit between average daily water demand in 2010 and local daily renewable supply from 1949 to 2010, ",
         "divided by the average annual rainfall volume in that basin (Devineniet et al. 2015)."))),
       #"<a href='http://onlinelibrary.wiley.com/wol1/doi/10.1002/2015GL063487/full' target='_blank'>Devineni et al. 2015</a></br>",
@@ -352,10 +352,10 @@ server <- function(input, output, session) {
         leafletProxy("USmap") %>%
           removeControl("basins") %>%
           clearGroup("basins") %>%
-          addPolygons(data=simplified, weight = 1, smoothFactor = 0.5, fillColor = ~ndcpal(ndc_category), color = ~ndcpal(ndc_category),fillOpacity = 0.8, opacity = 0.5,
+          addPolygons(data=simplified, weight = 1, smoothFactor = 1.5, fillColor = ~ndcpal(ndc_category), color = ~ndcpal(ndc_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
-          addLegend(position="bottomleft", colors=c('#D66460', "#E8E8E8", "#ffffff"), labels=c("High (NDC > 1)", "Low (NDC < 1)","Insufficient gage data"),
+          addLegend(position="bottomleft", colors=c('#D66460', "#E8E8E8", "#ffffff"), labels=c("High (NDC > 2)", "Low (NDC < 2)","Insufficient gage data"),
                     title="Water scarcity", opacity=1,layerId="basins")
       }
     #If only flood risk is selected
@@ -363,7 +363,7 @@ server <- function(input, output, session) {
         leafletProxy("USmap") %>%
           removeControl("basins") %>%
           clearGroup("basins") %>%
-          addPolygons(data=simplified,weight = 1, smoothFactor = 0.5, fillColor = ~floodpal(flood_category), color = ~floodpal(flood_category),fillOpacity = 0.8, opacity =0.5,
+          addPolygons(data=simplified,weight = 1, smoothFactor = 1.5, fillColor = ~floodpal(flood_category), color = ~floodpal(flood_category),fillOpacity = 0.8, opacity =0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft", colors=c('#69ABC0', "#E8E8E8","#ffffff"), labels=c('High (> 5% population)','Low (< 5% population)','Insufficient gage data'), 
@@ -374,7 +374,7 @@ server <- function(input, output, session) {
         leafletProxy("USmap") %>%
           removeControl("basins") %>%
           clearGroup("basins") %>%
-          addPolygons(data=simplified,weight = 1, smoothFactor = 0.5, fillColor = ~fishpal(fish_category), color = ~fishpal(fish_category),fillOpacity = 0.8, opacity = 0.5,
+          addPolygons(data=simplified,weight = 1, smoothFactor = 1.5, fillColor = ~fishpal(fish_category), color = ~fishpal(fish_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft", colors=c('#006d2c', "#E8E8E8","#ffffff"), labels=c('High (> U.S.-wide median EWU)', 'Low (< U.S.-wide median EWU)', 'Insufficient gage data'),
@@ -389,7 +389,7 @@ server <- function(input, output, session) {
         leafletProxy("USmap") %>%
           removeControl("basins") %>%
           clearGroup("basins") %>%
-          addPolygons(data=simplified, weight = 1, smoothFactor = 0.5, fillColor = ~fishndcpal(fishndc_category), color = ~fishndcpal(fishndc_category),fillOpacity = 0.8, opacity = 0.5,
+          addPolygons(data=simplified, weight = 1, smoothFactor = 1.5, fillColor = ~fishndcpal(fishndc_category), color = ~fishndcpal(fishndc_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft",
@@ -402,7 +402,7 @@ server <- function(input, output, session) {
         leafletProxy("USmap") %>%
           removeControl("basins") %>%
           clearGroup("basins") %>%
-          addPolygons(data=simplified, weight = 1, smoothFactor = 0.5, fillColor = ~fishfloodpal(fishflood_category), color = ~fishfloodpal(fishflood_category),fillOpacity = 0.8, opacity = 0.5,
+          addPolygons(data=simplified, weight = 1, smoothFactor = 1.5, fillColor = ~fishfloodpal(fishflood_category), color = ~fishfloodpal(fishflood_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft",
@@ -415,7 +415,7 @@ server <- function(input, output, session) {
         leafletProxy("USmap") %>%
           removeControl("basins") %>%
           clearGroup("basins") %>%
-          addPolygons(data=simplified, weight = 1, smoothFactor = 0.5, fillColor = ~ndcfloodpal(ndcflood_category), color = ~ndcfloodpal(ndcflood_category),fillOpacity = 0.8, opacity = 0.5,
+          addPolygons(data=simplified, weight = 1, smoothFactor = 1.5, fillColor = ~ndcfloodpal(ndcflood_category), color = ~ndcfloodpal(ndcflood_category),fillOpacity = 0.8, opacity = 0.5,
                       group = "basins",popup=polypopup,
                       highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
           addLegend(position="bottomleft",
@@ -431,7 +431,7 @@ server <- function(input, output, session) {
       leafletProxy("USmap") %>%
         removeControl("basins") %>%
         clearGroup("basins") %>%
-        addPolygons(data=simplified, weight = 1, smoothFactor = 0.5, fillColor = ~allpal(all_category), color = ~allpal(all_category),fillOpacity = 0.8, opacity = 0.5,
+        addPolygons(data=simplified, weight = 1, smoothFactor = 1.5, fillColor = ~allpal(all_category), color = ~allpal(all_category),fillOpacity = 0.8, opacity = 0.5,
                     group = "basins",popup=polypopup,
                     highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1)) %>%
         addLegend(position="bottomleft",
@@ -448,7 +448,8 @@ server <- function(input, output, session) {
     #####################################
     if ("dec" %in% input$chck) {
       leafletProxy("USmap") %>%
-        addPolylines(data= SpatialLinesDF, weight=1, color="#000000", opacity = 0.5,group="Quasi-extinction probability",
+        addPolylines(data= SpatialLinesDF, weight=1.5
+                     , color="#000000", opacity = 0.5,group="Quasi-extinction probability",
                      #SpatialLinesDF IDs stem from the polygons ID slot from the HUC6 polygon dataframe (simplified)
                      #while the HUC6 dataframe row numbers start by 1, polygons IDs start by 0, so you need to add+1 to SpatialLinesDF IDs to match them back to the HUC6 dataframe 
                      popup=polypopup[as.numeric(as.character(SpatialLinesDF@data$ID))+1]) 
@@ -514,13 +515,13 @@ server <- function(input, output, session) {
   tabdat <- reactive ({
     data_merge_sel <- data_merge_format
     if ("dec" %in% input$checkcat) {
-      data_merge_sel <- data_merge_sel[data_merge_sel$Quasiext.huc6 >= 0.5,]
+      data_merge_sel <- data_merge_sel[data_merge_sel$Quasiext.huc6 >= 50,]
     }
     if ("scar" %in% input$checkcat) {
-      data_merge_sel <- data_merge_sel[data_merge_sel$NDC_HUC >= 1,]
+      data_merge_sel <- data_merge_sel[data_merge_sel$NDC_HUC >= 2,]
     }
     if ("flood" %in% input$checkcat) {
-      data_merge_sel <- data_merge_sel[data_merge_sel$flood_FEMA>= 0.05,]
+      data_merge_sel <- data_merge_sel[data_merge_sel$flood_FEMA>= 5,]
     }
     if ("fish" %in% input$checkcat) {
       data_merge_sel <- data_merge_sel[data_merge_sel$EWU>= 0.2754,]
@@ -531,7 +532,7 @@ server <- function(input, output, session) {
   #Render table
   output$table <- DT::renderDataTable(
     DT::datatable({tabdat()},style='bootstrap', class='compact',selection = "multiple", rownames = F,
-                  colnames = c('Name'=1, 'Decline risk %'=3, 'Water scarcity'=4, 'NDC'=5, 'Flood risk %' = 6, '% pop. in flood zone' = 7, 
+                  colnames = c('Name'=1, 'Decline risk %'=3, 'Water scarcity'=4, 'NDC'=5, 'Flood risk' = 6, '% pop. in flood zone' = 7, 
                                'Fish diversity' = 8, 'EWU' = 9, 'Total population'=10, '% pop. in area with flood study'=11),
                   extensions = 'FixedHeader', options=list(scrollY=TRUE, fixedHeader = TRUE, columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% 
       formatRound(c(3,5,7,9,11), digits=2)
@@ -557,7 +558,7 @@ server <- function(input, output, session) {
       #Add selected basins to US map as red polygon boundaries
       leafletProxy("USmap") %>%
         clearGroup("selectedHUC") %>% #Clear previous selection
-        addPolygons(data=selectedHUCs, weight = 2, smoothFactor = 0.5, fillColor = 'red', color = 'red',fillOpacity = 0, opacity = 0.8,
+        addPolygons(data=selectedHUCs, weight = 2, smoothFactor = 1.5, fillColor = 'red', color = 'red',fillOpacity = 0, opacity = 0.8,
                     group = "selectedHUC", 
                     highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = F, opacity=1),
                     popup = polypopup[which(simplified$HUC6 %in% selectedHUCs$HUC6)]) %>%
@@ -641,13 +642,13 @@ server <- function(input, output, session) {
                  group="World gages extinct", color="#252525",fillOpacity = 0.4) %>%
       addCircles(data= GRDCdat[GRDCdat@data$t_start <= 2010 & GRDCdat@data$t_end >= 2010,],weight = 1,radius = ~200*(2010-t_start), 
                  group="World gages", color='#fc4e2a',fillOpacity = 0.4) %>%
-      # addLegendCustom(colors = c("#fc4e2a","#252525"), labels = c("Reporting", "Reporting discontinued"), sizes = c(10, 10)) %>%
       addLayersControl(
         baseGroups = c("OSM (default)",
                        "World Imagery",
                        "World Physical"),
         position="bottomleft",
-        options = layersControlOptions(collapsed = TRUE))
+        options = layersControlOptions(collapsed = TRUE)) %>%
+      addLegendCustom(colors = c("#fc4e2a","#252525"), labels = c("Reporting to GRDC", "Reporting to GRDC discontinued"), sizes = c(10, 10))
   })
   
   #Display gages based on selected data in the toggle bar
@@ -720,11 +721,11 @@ shinyApp(ui, server)
 #Please contact Mathis Messager @ messamat@uw.edu for the raw data required to perform data prep. 
 #The working space should be sufficient to run the app locally provided one or two changes in the code
 
-###############################
-# Prepare world gages network
-###############################
+# ###############################
+# # Prepare world gages network
+# ###############################
 #Import GRDC data
-# GRDCdat <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/World_gages/20170124_GRDC_Stations 2_metadata.csv")
+# GRDCdat <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/World_gages/grdc_stations_201801/GRDC_Stations.csv")
 # coordinates(GRDCdat) <- ~long+lat
 # class(GRDCdat)
 # 
@@ -732,9 +733,9 @@ shinyApp(ui, server)
 # # Prepare US basins attributes
 # ###############################
 # #Read in data on quasi-extinction probability (decline risk)
-# quasi_ext <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/Quasi-extinction/version_5/Quasiext.huc6_v5.csv")
-# quasi_ext [quasi_ext $rownames_HUC6 < 100000,'HUC6'] <- paste('0',as.character(quasi_ext [quasi_ext $rownames_HUC6 < 100000,'rownames_HUC6']),sep="")
-# quasi_ext [quasi_ext $rownames_HUC6 >= 100000,'HUC6'] <- as.character(quasi_ext [quasi_ext $rownames_HUC6 >= 100000,'rownames_HUC6'])
+# quasi_ext <- read.csv("F:/Miscellaneous/Hydro_classes/Analysis/Quasi-extinction/version_7/Quasiext.huc6_v7.csv")
+# quasi_ext [quasi_ext $rownames_HUC6 < 100000,'HUC6'] <- paste('0',as.character(quasi_ext [quasi_ext$rownames_HUC6 < 100000,'rownames_HUC6']),sep="")
+# quasi_ext [quasi_ext $rownames_HUC6 >= 100000,'HUC6'] <- as.character(quasi_ext [quasi_ext$rownames_HUC6 >= 100000,'rownames_HUC6'])
 # quasi_ext <- quasi_ext[,-c(1,2)]
 # 
 # #Read in data on basin characteristics
@@ -774,8 +775,8 @@ shinyApp(ui, server)
 # 
 # #NDC (categorize as high NDC when historical maximum cumulative deficit exceeds a full year of precipitation)
 # med_NDC_HUC = median(data_merge$NDC_HUC, na.rm=T)
-# data_merge[data_merge$NDC_HUC >= 1 & !is.na(data_merge$EWU),"ndc_category"] <- "HighNDC"
-# data_merge[data_merge$NDC_HUC < 1 & !is.na(data_merge$EWU),"ndc_category"] <- "LowNDC"
+# data_merge[data_merge$NDC_HUC >= 2 & !is.na(data_merge$EWU),"ndc_category"] <- "HighNDC"
+# data_merge[data_merge$NDC_HUC < 2 & !is.na(data_merge$EWU),"ndc_category"] <- "LowNDC"
 # 
 # #Flood (categorized as high flood risk when over 5% of the population inhabiting an area with a flood risk map lives wihtin a 100-yr flood zone)
 # med_floodpop = median(data_merge$flood_FEMA, na.rm=T)
@@ -795,10 +796,12 @@ shinyApp(ui, server)
 # fgdb = "F:/Miscellaneous/Hydro_classes/Figures/Figure_1_map/Figure1_map.gdb"
 # gagefc = readOGR(dsn=fgdb,layer="allgages_merge_manual_hist")
 # #Change column names
-# dischargecast<-read.csv("F:/Miscellaneous/Hydro_classes/discharge_yearly_cast_all.csv",colClasses=c(rep("character",3), rep("numeric",156)))
+# dischargecast<-read.csv("F:/Miscellaneous/Hydro_classes/discharge_yearly_cast_all_20180111.csv",colClasses=c(rep("character",3), rep("numeric",156)))
+# dischargecast <- dischargecast[,-ncol(dischargecast)]
 # colnames(gagefc@data)[9:164] <- colnames(dischargecast[,4:159])
 # #Remove gages with NA values (46 gages/23k)
 # gagefc <- gagefc[!is.na(gagefc@data$X1861),]
+# object.size(gagefc)
 # 
 # ###################################
 # # Prepare US basins geospatial data
@@ -806,18 +809,26 @@ shinyApp(ui, server)
 # 
 # # Import basins shapefile
 # folder = "F:/Miscellaneous/Hydro_classes/Figures/Figure_3/FloodNDC_Map"
-# fc = readOGR(dsn=folder,layer="HUC6")
+# fc = readOGR(dsn=folder,layer="HUC6_conterm")
 # # Determine the FC extent, projection, and attribute information
 # class(fc)
 # summary(fc)
 # 
 # #Simplify polygons to reduce load time
-# summary(fc)
-# object.size(fc)
-# simplified <- rmapshaper::ms_simplify(fc)
-# object.size(simplified)
+# # summary(fc)
+# # object.size(fc)
+# # simplified <- rmapshaper::ms_simplify(fc)
+# # object.size(simplified)
+# # writeOGR(obj=simplified, dsn=folder,layer="HUC6_Rsimplified", driver="ESRI Shapefile")
+# #Insufficient simplification: simplify in ArcGIS using the 'Simplify polygon' function with 'remove points' and 1 km max.deviation option.
+# simplified_max  = readOGR(dsn=folder,layer="HUC6_Arcsimplified")
 # #Merge shapefile with attributes
-# simplified <- merge(simplified, data_merge, by="HUC6",all.x=T)
+# simplified <- merge(simplified_max, data_merge, by="HUC6",all.x=T)
+# 
+# #Try to write out as topojson... but does not decrease size/does not use
+# #topojson_write(input=simplified_max, file='F:/Miscellaneous/Hydro_classes/Map/Map_9/www/data/simplified_max.topojson', precision=1)
+# #simplified_maxjson <- topojson_read('F:/Miscellaneous/Hydro_classes/Map/Map_9/www/data/simplified_max.topojson')
+# #object.size(simplified_maxjson)
 # 
 # #Prepare hatched polygons to represent basins with high gaging density decline risk
 # #Twicked from https://statnmap.com/en/2017/05/how-to-fill-a-hatched-area-polygon-with-holes-in-leaflet-with-r/
@@ -892,30 +903,34 @@ shinyApp(ui, server)
 #   SpatialLines(all.Lines),
 #   data = data.frame(ID = all.Lines.ID),
 #   match.ID = FALSE)
-# #
+#
 # 
 # ###############################
 # #Prepare formatted table
 # ###############################
-# data_merge_format <- data_merge[,c(13,1,2,15,7,16,11,14,4,8,12)]
-# data_merge_format$totalpop <- round(as.numeric(data_merge_format$totalpop))
-# data_merge_format[data_merge_format$ndc_category == 'LowNDC' & !is.na(data_merge_format$ndc_category), "ndc_category"] <- "Low"
-# data_merge_format[data_merge_format$ndc_category == 'HighNDC' & !is.na(data_merge_format$ndc_category), "ndc_category"] <- "High"
-# data_merge_format[data_merge_format$flood_category == 'LowRisk' & !is.na(data_merge_format$flood_category), "flood_category"] <- "Low"
-# data_merge_format[data_merge_format$flood_category == 'HighRisk' & !is.na(data_merge_format$flood_category), "flood_category"] <- "High"
-# data_merge_format[data_merge_format$fish_category == 'LowEndemism' & !is.na(data_merge_format$fish_category), "fish_category"] <- "Low"
-# data_merge_format[data_merge_format$fish_category == 'HighEndemism' & !is.na(data_merge_format$fish_category), "fish_category"] <- "High"
-# 
+# data_merge$totalpop <- round(as.numeric(data_merge$totalpop))
+# data_merge[data_merge$ndc_category == 'LowNDC' & !is.na(data_merge$ndc_category), "ndc_category"] <- "Low"
+# data_merge[data_merge$ndc_category == 'HighNDC' & !is.na(data_merge$ndc_category), "ndc_category"] <- "High"
+# data_merge[data_merge$flood_category == 'LowRisk' & !is.na(data_merge$flood_category), "flood_category"] <- "Low"
+# data_merge[data_merge$flood_category == 'HighRisk' & !is.na(data_merge$flood_category), "flood_category"] <- "High"
+# data_merge[data_merge$fish_category == 'LowEndemism' & !is.na(data_merge$fish_category), "fish_category"] <- "Low"
+# data_merge[data_merge$fish_category == 'HighEndemism' & !is.na(data_merge$fish_category), "fish_category"] <- "High"
+# data_merge_format <- data_merge[,c(15,1,2,17,9,18,13,16,6,10,14)]
+# data_merge_format$Quasiext.huc6 <- 100*data_merge_format$Quasiext.huc6
+# data_merge_format$flood_FEMA <- 100*data_merge_format$flood_FEMA
+# data_merge_format$FEMA_total <- 100*data_merge_format$FEMA_total
+
 # ################################
 # #Add metadata files to workspace
 # ###############################
-# readme <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_8/www/README.txt')
-# metadata <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_8/www/metadata_columns.csv')
+# readme <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_10/www/README.txt')
+# metadata <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_10/www/metadata_columns.csv')
 # 
-# readme_gages <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_8/www/README_gages.txt')
-# metadata_gages <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_8/www/metadata_columns_gages.csv')
+# readme_gages <- readtext('F:/Miscellaneous/Hydro_classes/Map/Map_10/www/README_gages.txt')
+# metadata_gages <- read.csv('F:/Miscellaneous/Hydro_classes/Map/Map_10/www/metadata_columns_gages.csv')
 # 
-# rm(fc) 
+# rm(fc)
 # rm(all.Lines)
 # rm(polys)
-# save.image("F:/Miscellaneous/Hydro_classes/Map/Map_8/Map_8.RData")
+# save.image("F:/Miscellaneous/Hydro_classes/Map/Map_10/Map_10.RData")
+
