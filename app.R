@@ -200,7 +200,7 @@ ui <- navbarPage(title=HTML('<div><a href="https://www.nature.com/natsustain/" t
                          HTML('
                               <p>This application provides supplementary material to the Nature Sustainability article 
                               <a href="https://www.nature.com/natsustain/" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a> 
-                              published in XXXX 2018. <br/>
+                              published in XXXX 2018. For a full description of the Methods, please follow the link to the publication. <br/>
                               <br/>
                               The <b>United States</b> tab shows the history of water information in the US. In addition, it shows flood risk, water scarcity, fish diversity, and the risk of gaging density decline at the river basin level.
                               </br>
@@ -211,9 +211,9 @@ ui <- navbarPage(title=HTML('<div><a href="https://www.nature.com/natsustain/" t
                               Therefore, an inactive gage could either be due to the discontinuation of data recording or the lack of reporting of recorded data by the entity managing the gage
                               <br/>'),
                          br(),
-                         h2("Methodology"),
-                         tags$iframe(style="height:400px; width:50%; scrolling=yes",  #PDF inset
-                                     src="Ruhi_et_al_streamgaging_SM_def.pdf"),
+                         #h2("Methodology"),
+                         #tags$iframe(style="height:400px; width:50%; scrolling=yes",  #PDF inset
+                         #            src="Ruhi_et_al_streamgaging_SM_def.pdf"),
                          h2("Contact information and source code"),
                          HTML('
                               <p>Original publication: Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Tracking the pulse of the Earth&#39s fresh waters"</br>
