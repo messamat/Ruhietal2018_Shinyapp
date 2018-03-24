@@ -1,22 +1,22 @@
-source('dependencies.R')
-#library(foreign)
-#library(leaflet)
-#library(leaflet.extras)
-#library(tidyverse)
-#library(sp)
-#library(rgeos)
-#library(maps)
-#library(rgdal)
-#library(dplyr)
-#library(rmapshaper)
-#library(shiny)
-#library(shinyBS)
-#library(ggplot2)
-#library(DT)
-#library(rsconnect)
-#library(grid)
-#library(gridExtra)
-#library(readtext)
+-source('dependencies.R')
+-#library(foreign)
+-#library(leaflet)
+-#library(leaflet.extras)
+-#library(tidyverse)
+-#library(sp)
+-#library(rgeos)
+-#library(maps)
+-#library(rgdal)
+-#library(dplyr)
+-#library(rmapshaper)
+-#library(shiny)
+-#library(shinyBS)
+-#library(ggplot2)
+-#library(DT)
+-#library(rsconnect)
+-#library(grid)
+-#library(gridExtra)
+-#library(readtext)
 #library(geojsonio) for topojson conversion - if needed
 #library(hddtools) to access GRDC data
 #For hatched polygons
@@ -85,9 +85,10 @@ polypopup <- paste0("<strong>HUC6 name: </strong>", simplified$NAME,
 
 
 ####################################################### UI ########################################################################################
-ui <- navbarPage(title=HTML('<div><a href="https://www.nature.com/natsustain/" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
+ui <- navbarPage(windowTitle="Tracking the pulse of the Earth's fresh waters",
+                 title=HTML('<div><a href="https://www.nature.com/natsustain/" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
                  theme="simplex.css", # for shinyapps.io
-                 #theme="http://bootswatch.com/simplex/bootstrap.css", #for local/RStudio and shiny-server
+                 #theme="https://bootswatch.com/simplex/bootstrap.css", #for local/RStudio and shiny-server
                  #shinytheme() from shinythemes package must be avoided because it conflicts with bsModal in shinyBS.
                  id="nav",
                  
@@ -200,7 +201,7 @@ ui <- navbarPage(title=HTML('<div><a href="https://www.nature.com/natsustain/" t
                          HTML('
                               <p>This application provides supplementary material to the Nature Sustainability article 
                               <a href="https://www.nature.com/natsustain/" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a> 
-                              published in XXXX 2018. For a full description of the Methods, please follow the link to the publication. <br/>
+                              published in April 2018. For a full description of the Methods, please follow the link to the publication. <br/>
                               <br/>
                               The <b>United States</b> tab shows the history of water information in the US. In addition, it shows flood risk, water scarcity, fish diversity, and the risk of gaging density decline at the river basin level.
                               </br>
@@ -933,4 +934,3 @@ shinyApp(ui, server)
 # rm(all.Lines)
 # rm(polys)
 # save.image("F:/Miscellaneous/Hydro_classes/Map/Map_10/Map_10.RData")
-
