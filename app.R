@@ -1,22 +1,21 @@
-source('dependencies.R')
-#library(foreign)
-#library(leaflet)
-#library(leaflet.extras)
-#library(tidyverse)
-#library(sp)
-#library(rgeos)
-#library(maps)
-#library(rgdal)
-#library(dplyr)
-#library(rmapshaper)
-#library(shiny)
-#library(shinyBS)
-#library(ggplot2)
-#library(DT)
-#library(rsconnect)
-#library(grid)
-#library(gridExtra)
-#library(readtext)
+library(foreign)
+library(leaflet)
+library(leaflet.extras)
+library(tidyverse)
+library(sp)
+library(rgeos)
+library(maps)
+library(rgdal)
+library(dplyr)
+library(rmapshaper)
+library(shiny)
+library(shinyBS)
+library(ggplot2)
+library(DT)
+library(rsconnect)
+library(grid)
+library(gridExtra)
+library(readtext)
 #library(geojsonio) for topojson conversion - if needed
 #library(hddtools) to access GRDC data
 #For hatched polygons
@@ -85,9 +84,10 @@ polypopup <- paste0("<strong>HUC6 name: </strong>", simplified$NAME,
 
 
 ####################################################### UI ########################################################################################
-ui <- navbarPage(title=HTML('<div><a href="https://www.nature.com/natsustain/" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
+ui <- navbarPage(windowTitle="Tracking the pulse of the Earth's fresh waters",
+                 title=HTML('<div><a href="https://www.nature.com/natsustain/" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
                  theme="simplex.css", # for shinyapps.io
-                 #theme="http://bootswatch.com/simplex/bootstrap.css", #for local/RStudio and shiny-server
+                 #theme="https://bootswatch.com/simplex/bootstrap.css", #for local/RStudio and shiny-server
                  #shinytheme() from shinythemes package must be avoided because it conflicts with bsModal in shinyBS.
                  id="nav",
                  
@@ -200,20 +200,19 @@ ui <- navbarPage(title=HTML('<div><a href="https://www.nature.com/natsustain/" t
                          HTML('
                               <p>This application provides supplementary material to the Nature Sustainability article 
                               <a href="https://www.nature.com/natsustain/" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a> 
-                              published in XXXX 2018. For a full description of the Methods, please follow the link to the publication. <br/>
+                              published in December 2017. <br/>
                               <br/>
                               The <b>United States</b> tab shows the history of water information in the US. In addition, it shows flood risk, water scarcity, fish diversity, and the risk of gaging density decline at the river basin level.
                               </br>
-                              The <b>Explore U.S. data</b> tab allows users to download data on US river basins shown in the "United States" tab
+                              The <b>Explore data</b> tab allows users to download data on US river basins shown in the "United States" tab
                               </br>
                               The <b>World</b> tab shows the history of stream gages data reporting to the
                               <a href="http://www.bafg.de/GRDC/EN/Home/homepage_node.html">Global Runoff Data Center (GRDC)</a>. A gage is considered active if its records were reported to the GRDC that year. </br>
                               Therefore, an inactive gage could either be due to the discontinuation of data recording or the lack of reporting of recorded data by the entity managing the gage
                               <br/>'),
                          br(),
-                         #h2("Methodology"),
-                         #tags$iframe(style="height:400px; width:50%; scrolling=yes",  #PDF inset
-                         #            src="Ruhi_et_al_streamgaging_SM_def.pdf"),
+                         h2("Methodology"),
+                         tags$object(width="50%", height="400px", data="Ruhi_et_al_streamgaging_SM_def.pdf"),
                          h2("Contact information and source code"),
                          HTML('
                               <p>Original publication: Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Tracking the pulse of the Earth&#39s fresh waters"</br>
@@ -933,4 +932,3 @@ shinyApp(ui, server)
 # rm(all.Lines)
 # rm(polys)
 # save.image("F:/Miscellaneous/Hydro_classes/Map/Map_10/Map_10.RData")
-
