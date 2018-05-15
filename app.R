@@ -83,11 +83,12 @@ polypopup <- paste0("<strong>HUC6 name: </strong>", simplified$NAME,
                     "<br><strong>Flood risk: </strong>", round(100*as.numeric(simplified$flood_FEMA),2),"%",
                     "<br><strong>EWU: </strong>", round(as.numeric(simplified$EWU),2))
 
+
 ####################################################### UI ########################################################################################
 ui <- navbarPage(windowTitle="Tracking the pulse of the Earth's fresh waters",
-                 title=HTML('<div><a href="https://www.nature.com/natsustain/" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
-                 #theme="simplex.css", # for shinyapps.io
-                 theme="https://bootswatch.com/simplex/bootstrap.css", #for local/RStudio and shiny-server
+                 title=HTML('<div><a href="https://www.nature.com/articles/s41893-018-0047-7" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a></div>'), #Link to online article
+                 theme="simplex.css", # for shinyapps.io
+                 #theme="https://bootswatch.com/simplex/bootstrap.css", #for local/RStudio and shiny-server
                  #shinytheme() from shinythemes package must be avoided because it conflicts with bsModal in shinyBS.
                  id="nav",
                  
@@ -110,7 +111,7 @@ ui <- navbarPage(windowTitle="Tracking the pulse of the Earth's fresh waters",
                                             )
                               ),
                               tags$div(id="cite2",
-                                       HTML('<a href="https://www.nature.com/natsustain/" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Tracking the pulse of the Earth&#39s fresh waters"</a>')
+                                       HTML('<a href="https://www.nature.com/articles/s41893-018-0047-7" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2018) "Tracking the pulse of the Earth&#39s fresh waters"</a>')
                               )
                           )
                  ),
@@ -190,7 +191,7 @@ ui <- navbarPage(windowTitle="Tracking the pulse of the Earth's fresh waters",
                               ),
                               
                               tags$div(id="cite2",
-                                       HTML('<a href="https://www.nature.com/natsustain/" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Tracking the pulse of the Earth&#39s fresh waters"</a>')
+                                       HTML('<a href="https://www.nature.com/articles/s41893-018-0047-7" target="_blank">Ruhi, A., Messager, L. M., & Olden, J. D. (2018) "Tracking the pulse of the Earth&#39s fresh waters"</a>')
                               )
                           )
                  ),
@@ -199,7 +200,7 @@ ui <- navbarPage(windowTitle="Tracking the pulse of the Earth's fresh waters",
                          h2("About this application"),
                          HTML('
                               <p>This application provides supplementary material to the Nature Sustainability article 
-                              <a href="https://www.nature.com/natsustain/" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a> 
+                              <a href="https://www.nature.com/articles/s41893-018-0047-7" target="_blank">Tracking the pulse of the Earth&#39s fresh waters</a> 
                               published in April 2018. For a full description of the Methods, please follow the link to the publication. <br/>
                               <br/>
                               The <b>United States</b> tab shows the history of water information in the US. In addition, it shows flood risk, water scarcity, fish diversity, and the risk of gaging density decline at the river basin level.
@@ -212,14 +213,13 @@ ui <- navbarPage(windowTitle="Tracking the pulse of the Earth's fresh waters",
                               <br/>'),
                          br(),
                          #h2("Methodology"),
-                         #tags$iframe(style="height:400px; width:50%; scrolling=yes",  #PDF inset
-                         #            src="Ruhi_et_al_streamgaging_SM_def.pdf"),
+                         #tags$object(width="50%", height="400px", data="Ruhi_et_al_streamgaging_SM_def.pdf"),
                          h2("Contact information and source code"),
                          HTML('
-                              <p>Original publication: Ruhi, A., Messager, L. M., & Olden, J. D. (2017) "Tracking the pulse of the Earth&#39s fresh waters"</br>
+                              <p>Original publication: Ruhi, A., Messager, L. M., & Olden, J. D. (2018) "Tracking the pulse of the Earth&#39s fresh waters", doi:10.1038/s41893-018-0047-7</br>
                               App developer: Mathis Messager (email: messamat@uw.edu) </br>
-                              Study source code: github link </br>
-                              <a href="https://github.com/messamat/Ruhietal2017_Shinyapp" target="_blank">Map source code</a></br>')
+                              <a href="https://github.com/messamat/Ruhietal2018_Analysis" target="_blank">Study source code</a></br>
+                              <a href="https://github.com/messamat/Ruhietal2018_Shinyapp" target="_blank">Map source code</a></br>')
                          )
 )
 
@@ -587,7 +587,7 @@ server <- function(input, output, session) {
   #When run locally, can be buggy if Rtools + env.path not correct. Troubleshoot here: https://stackoverflow.com/questions/29129681/create-zip-file-error-running-command-had-status-127
   #In my case adding C:\Rtools\bin was insufficient. Instead, had to add C:\RBuildTools\3.3\bin to PATH in environmental variables
   output$save  <- downloadHandler(
-    filename = 'Ruhietal2017_basindata.zip',
+    filename = 'Ruhietal2018_basindata.zip',
     content = function(fname) {
       #create temp file
       tmpdir <- tempdir()
@@ -606,7 +606,7 @@ server <- function(input, output, session) {
   )
   
   output$saveselected <- downloadHandler(
-    filename = 'Ruhietal2017_gagedata.zip',
+    filename = 'Ruhietal2018_gagedata.zip',
     content = function(fname_sel) {
       #create temp file
       tmpdir <- tempdir()
