@@ -35,7 +35,7 @@ pkgs <- merge(dependencies, pkgs, by="Package", all.x=TRUE)
 pkgs <- pkgs[mapply(compareVersion, pkgs$Min.Version, pkgs$Version) > 0, ]
 
 # Install missing and newer packages
-cran <- pkgs[is.na(pkgs$repo), ]
+cran <- pkgs[is.na(pkgs$repo) | nchar(pkgs$repo) == 0, ]
 lapply(cran$Package, install.packages)
 github <- pkgs[!is.na(pkgs$repo), ]
 lapply(github$repo, devtools::install_github)
