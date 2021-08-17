@@ -19,7 +19,7 @@ dependencies <- read.csv(textConnection("
   grid,            0.4-7,
   gridExtra,       2.2.1,
   HatchedPolygons, 0.1.0, statnmap/HatchedPolygons
-"), stringsAsFactors = FALSE, strip.white = TRUE)
+"), stringsAsFactors = FALSE, strip.white = TRUE, na.strings = "")
 
 ## No changes necessary below. ##
 
@@ -35,10 +35,10 @@ pkgs <- merge(dependencies, pkgs, by="Package", all.x=TRUE)
 pkgs <- pkgs[mapply(compareVersion, pkgs$Min.Version, pkgs$Version) > 0, ]
 
 # Install missing and newer packages
-cran <- pkgs[is.na(pkgs$repo) | nchar(pkgs$repo) == 0, ]
+cran <- pkgs[is.na(pkgs$repo), ]
 lapply(cran$Package, install.packages)
 github <- pkgs[!is.na(pkgs$repo), ]
 lapply(github$repo, devtools::install_github)
 
 # Require dependencies [optional]
-lapply(dependencies$Package, require, character.only=TRUE)
+# lapply(dependencies$Package, require, character.only=TRUE)
